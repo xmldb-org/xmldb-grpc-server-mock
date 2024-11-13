@@ -1,0 +1,45 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "group:all",
+    "schedule:daily"
+  ],
+  "dependencyDashboard": true,
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
+    },
+    {
+      "matchDepNames": [
+        "com.google.protobuf:protoc"
+      ],
+      "allowedVersions": "<4.0.0"
+    },
+    {
+      "matchDepNames": [
+        "net.sf.xmldb-org:xmldb-api"
+      ],
+      "allowedVersions": "/^[\\d]+\\.[\\d]+\\.[\\d]+-protobuf.*/"
+    },
+    {
+      "matchManagers": [
+        "gradle-wrapper"
+      ],
+      "allowedVersions": "<9"
+    }
+  ],
+  "schedule": [
+    "at any time"
+  ]
+}
