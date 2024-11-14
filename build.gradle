@@ -1,0 +1,247 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License") you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in
+ * writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
+plugins {
+  id 'eclipse'
+  id 'idea'
+  id 'java-library'
+  id 'java-test-fixtures'
+  id 'com.diffplug.spotless' version '6.25.0'
+  id 'com.github.ben-manes.versions' version '0.51.0'
+  id 'com.google.protobuf' version '0.9.4'
+  id 'org.kordamp.gradle.java-project' version '0.54.0'
+}
+
+apply {
+  plugin 'org.kordamp.gradle.checkstyle'
+  plugin 'org.kordamp.gradle.errorprone'
+  plugin 'org.kordamp.gradle.sonar'
+}
+
+if (!project.hasProperty('sonatypeUsername')) ext.sonatypeUsername = '**undefined**'
+if (!project.hasProperty('sonatypePassword')) ext.sonatypePassword = '**undefined**'
+if (!project.hasProperty('sonarToken')) ext.sonarToken = '**undefined**'
+
+group = 'net.sf.xmldb-org'
+
+defaultTasks 'build'
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+  mavenCentral()
+  maven {
+    url = 'https://oss.sonatype.org/content/repositories/snapshots'
+  }
+}
+
+dependencies {
+  implementation 'ch.qos.logback:logback-classic:1.5.12'
+  implementation 'com.google.protobuf:protobuf-javalite:4.28.3'
+  implementation 'io.grpc:grpc-stub:1.68.1'
+  implementation 'io.grpc:grpc-protobuf:1.68.1'
+  implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
+  implementation 'net.sf.xmldb-org:xmldb-api:+'
+
+  // used for server / client
+  implementation 'io.grpc:grpc-netty-shaded:1.68.1'
+
+  testImplementation 'org.assertj:assertj-core:3.26.3'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params:5.11.3'
+  testImplementation 'org.mockito:mockito-core:5.14.2'
+  testImplementation 'org.mockito:mockito-junit-jupiter:5.14.2'
+
+  testRuntimeOnly 'org.mockito:mockito-core:5.14.2'
+  testRuntimeOnly 'org.junit.platform:junit-platform-runner:1.11.3'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
+
+  protobuf 'net.sf.xmldb-org:xmldb-api:*'
+}
+
+compileJava {
+  options.compilerArgs << '-Xlint:unchecked'
+}
+
+jar {
+  manifest.attributes 'Implementation-Title': 'XML:DB API specification',
+                      'Specification-Title': 'XML:DB API specification',
+                      'Automatic-Module-Name': "org.xmldb.remote"
+}
+
+protobuf {
+  protoc {
+    // The artifact spec for the Protobuf Compiler
+    artifact = 'com.google.protobuf:protoc:3.25.3'
+  }
+  plugins {
+    // Optional: an artifact spec for a protoc plugin, with "grpc" as
+    // the identifier, which can be referred to in the "plugins"
+    // container of the "generateProtoTasks" closure.
+    grpc {
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.68.1'
+    }
+  }
+  generateProtoTasks {
+    ofSourceSet('main').configureEach {
+      plugins {
+        // Apply the "grpc" plugin whose spec is defined above, without
+        // options.  Note the braces cannot be omitted, otherwise the
+        // plugin will not be added. This is because of the implicit way
+        // NamedDomainObjectContainer binds the methods.
+        grpc {}
+      }
+    }
+  }
+}
+
+tasks.withType(Jar).configureEach {
+  dependsOn 'generateProto'
+}
+
+tasks.withType(JavaCompile).configureEach {
+  dependsOn 'spotlessJavaApply'
+}
+
+tasks.withType(nl.javadude.gradle.plugins.license.License).configureEach {
+  dependsOn 'generateProto'
+}
+
+tasks.withType(com.diffplug.gradle.spotless.SpotlessTask).configureEach {
+  mustRunAfter 'generateProto'
+}
+
+spotless {
+  java {
+    eclipse().configFile('gradle/xmldb-remote-style.xml')
+    importOrderFile('gradle/xmldb-remote.importorder')
+    replace('generated', '@javax.annotation.Generated', '@jakarta.annotation.Generated')
+  }
+}
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    events 'skipped'
+  }
+}
+
+dependencyUpdates.resolutionStrategy {
+  componentSelection { rules ->
+    rules.all { ComponentSelection selection ->
+      boolean rejected = ['alpha', 'beta', 'rc', 'cr', 'm', 'pr', 'preview'].any { qualifier ->
+        selection.candidate.version ==~ /(?i).*[.-]${qualifier}[.\d-]*/
+      }
+      if (rejected) {
+        selection.reject('Release candidate')
+      }
+    }
+  }
+}
+
+config {
+  release = !project.version.toString().endsWith('-SNAPSHOT')
+  info {
+    vendor = 'reinhapa'
+    name = 'XML:DB Proto buffers remote client'
+    description = 'XML:DB Initiative for XML Databases'
+    inceptionYear = '2023'
+    links {
+      website = 'https://github.com/xmldb-org/xmldb-remote'
+      issueTracker = 'https://github.com/xmldb-org/xmldb-remote/issues'
+      scm = 'https://github.com/xmldb-org/xmldb-remote.git'
+    }
+    scm {
+      connection = 'scm:git://github.com/xmldb-org/xmldb-remote.git'
+      developerConnection = 'scm:git://github.com/xmldb-org/xmldb-remote.git'
+      url = 'https://github.com/xmldb-org/xmldb-remote'
+    }
+    organization {
+      name = 'XML:DB Initiative for XML Databases'
+      url = 'https://github.com/xmldb-org'
+    }
+    people {
+      person {
+        id = 'xmldb-remote'
+        name = 'XML:DB Initiative'
+        roles = [ 'owner' ]
+      }
+      person {
+        id = 'reinhapa'
+        name = 'Patrick Reinhart'
+        email = 'patrick@reini.net'
+        roles = [ 'developer' ]
+      }
+    }
+    repositories {
+      repository {
+        name = 'sonatypeRelease'
+        url  = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+      }
+      repository {
+        name = 'sonatypeSnapshot'
+        url  = 'https://oss.sonatype.org/content/repositories/snapshots/'
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+      }
+    }
+  }
+  quality {
+    errorprone {
+      errorProneVersion = '2.28.0'
+    }
+    sonar {
+      hostUrl = 'https://sonarcloud.io'
+      login = sonarToken
+      organization = 'xmldb-org'
+      projectKey = 'xmldb-org_xmldb-remote'
+    }
+  }
+  licensing {
+    excludes = [ 'org/xmldb/api/grpc/**' ]
+    licenses {
+      license {
+        name = 'The XML:DB Initiative Software License'
+        url = 'https://github.com/xmldb-org/xmldb-remote/raw/master/LICENSE'
+      }
+    }
+  }
+  docs {
+    javadoc {
+      autoLinks.enabled = false
+      options {
+        docTitle = "XML:DB ${project.version} grpc remote client"
+        header = "XML:DB ${project.version} grpc remote client"
+        windowTitle = "XML:DB ${project.version} grpc remote client"
+      }
+    }
+  }
+  artifacts {
+    minpom.enabled = false
+  }
+  publishing {
+    signing.enabled = release
+    releasesRepository  = 'sonatypeRelease'
+    snapshotsRepository = 'sonatypeSnapshot'
+  }
+}
+
+normalization {
+  runtimeClasspath {
+    ignore '/META-INF/MANIFEST.MF'
+  }
+}

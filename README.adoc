@@ -2,9 +2,9 @@
 Patrick Reinhart <https://github.com/reinhapa[@reinhapa]>
 :group-name: net.sf.xmldb-org
 :project-org: xmldb-org
-:project-name: xmldb-remote
+:project-name: xmldb-grpc-server-mock
 :project-full-path: {project-org}/{project-name}
-:github-branch: master
+:github-branch: main
 :java-version: 21
 
 image:https://img.shields.io/badge/license-XML:DB-blue.svg["Apache License Software License", link="https://github.com/{project-full-path}/blob/{github-branch}/LICENSE"]
@@ -19,10 +19,10 @@ Supported Java versions:
 image:https://img.shields.io/badge/Java-{java-version}-blue.svg["Java {java-version}", link="https://adoptium.net/"]
 
 == Content
-The API interfaces are what driver developers must implement when creating a
-new driver and are the interfaces that applications are developed against.
-Along with the interfaces a concrete DriverManager implementation is also
-provides.
+Contains a mock gRPC server side implementation in order to simulate a XML:DB API
+access using the protobuf specified client/server communication.
+
+This project should act as an example on how to implement a server side implementation.
 
 
 == Building
