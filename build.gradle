@@ -203,6 +203,7 @@ config {
   quality {
     errorprone {
       errorProneVersion = '2.28.0'
+      excludedPaths = '.*/generated/source/proto/.*'
     }
     sonar {
       hostUrl = 'https://sonarcloud.io'
