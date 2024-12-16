@@ -87,7 +87,7 @@ protobuf {
     // the identifier, which can be referred to in the "plugins"
     // container of the "generateProtoTasks" closure.
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:1.68.2'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.69.0'
     }
   }
   generateProtoTasks {
