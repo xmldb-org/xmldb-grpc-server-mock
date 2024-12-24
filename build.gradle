@@ -54,7 +54,7 @@ dependencies {
   // used for server / client
   implementation 'io.grpc:grpc-netty-shaded:1.69.0'
 
-  testImplementation 'org.assertj:assertj-core:3.26.3'
+  testImplementation 'org.assertj:assertj-core:3.27.0'
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:5.11.4'
   testImplementation 'org.mockito:mockito-core:5.14.2'
