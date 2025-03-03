@@ -44,7 +44,7 @@ repositories {
 }
 
 dependencies {
-  implementation 'ch.qos.logback:logback-classic:1.5.16'
+  implementation 'ch.qos.logback:logback-classic:1.5.17'
   implementation 'com.google.protobuf:protobuf-javalite:4.29.3'
   implementation 'io.grpc:grpc-stub:1.70.0'
   implementation 'io.grpc:grpc-protobuf:1.70.0'
