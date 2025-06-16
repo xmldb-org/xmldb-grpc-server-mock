@@ -79,7 +79,7 @@ jar {
 protobuf {
   protoc {
     // The artifact spec for the Protobuf Compiler
-    artifact = 'com.google.protobuf:protoc:3.25.7'
+    artifact = 'com.google.protobuf:protoc:3.25.8'
   }
   plugins {
     // Optional: an artifact spec for a protoc plugin, with "grpc" as
