@@ -46,13 +46,13 @@ repositories {
 dependencies {
   implementation 'ch.qos.logback:logback-classic:1.5.19'
   implementation 'com.google.protobuf:protobuf-javalite:4.32.1'
-  implementation 'io.grpc:grpc-stub:1.75.0'
-  implementation 'io.grpc:grpc-protobuf:1.75.0'
+  implementation 'io.grpc:grpc-stub:1.76.0'
+  implementation 'io.grpc:grpc-protobuf:1.76.0'
   implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
   implementation 'net.sf.xmldb-org:xmldb-api:+'
 
   // used for server / client
-  implementation 'io.grpc:grpc-netty-shaded:1.75.0'
+  implementation 'io.grpc:grpc-netty-shaded:1.76.0'
 
   testImplementation 'org.assertj:assertj-core:3.27.6'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:6.0.0'
@@ -86,7 +86,7 @@ protobuf {
     // the identifier, which can be referred to in the "plugins"
     // container of the "generateProtoTasks" closure.
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:1.75.0'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.76.0'
     }
   }
   generateProtoTasks {
