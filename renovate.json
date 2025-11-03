@@ -1,19 +1,39 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
+    "config:recommended",
     "group:all",
     "schedule:daily"
   ],
   "dependencyDashboard": true,
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "automerge": true
     },
     {
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false
+    },
+    {
+      "matchDepNames": [
+        "com.google.protobuf:protoc"
+      ],
+      "allowedVersions": "<4.0.0"
+    },
+    {
+      "matchManagers": [
+        "gradle-wrapper"
+      ],
+      "allowedVersions": "<9"
     }
   ],
-  "schedule": ["at any time"]
+  "schedule": [
+    "at any time"
+  ]
 }
