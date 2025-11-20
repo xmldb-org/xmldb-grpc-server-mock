@@ -27,6 +27,12 @@
       "allowedVersions": "<4.0.0"
     },
     {
+      "matchDepNames": [
+        "net.sf.xmldb-org:xmldb-api"
+      ],
+      "allowedVersions": "/^[\\d]+\\.[\\d]+\\.[\\d]+-protobuf.*/"
+    },
+    {
       "matchManagers": [
         "gradle-wrapper"
       ],
