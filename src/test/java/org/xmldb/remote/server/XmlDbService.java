@@ -20,7 +20,7 @@ public class XmlDbService extends XmlDbServiceGrpc.XmlDbServiceImplBase {
   private static final Logger LOGGER = LoggerFactory.getLogger(XmlDbService.class);
 
   @Override
-  public void getSystemInfo(EmptyRequest request, StreamObserver<SystemInfo> responseObserver) {
+  public void systemInfo(EmptyRequest request, StreamObserver<SystemInfo> responseObserver) {
     LOGGER.info("getSystemInfo({})", request);
     final var systemInfoBuilder = SystemInfo.newBuilder();
     systemInfoBuilder.getJavaVersionBuilder() //
