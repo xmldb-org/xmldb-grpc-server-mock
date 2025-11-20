@@ -11,10 +11,7 @@ package org.xmldb.remote.server;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Status.UNAUTHENTICATED;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.xmldb.remote.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
-
-import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,17 +21,23 @@ import com.google.common.base.Strings;
 import io.grpc.Context;
 import io.grpc.Contexts;
 import io.grpc.Metadata;
+import io.grpc.Metadata.Key;
 import io.grpc.ServerCall;
 import io.grpc.ServerInterceptor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
-public final class ServerCallHandler implements ServerInterceptor {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ServerCallHandler.class);
-  public static final Metadata.Key<String> AUTHENTICATION =
-      Metadata.Key.of("Authentication", ASCII_STRING_MARSHALLER);
+@ApplicationScoped
+public class AuthenticationHandler implements ServerInterceptor {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationHandler.class);
+
+  public static final Key<String> AUTHENTICATION =
+      Key.of("Authentication", ASCII_STRING_MARSHALLER);
 
   private final AuthenticationService authenticationService;
 
-  ServerCallHandler(AuthenticationService authenticationService) {
+  @Inject
+  AuthenticationHandler(AuthenticationService authenticationService) {
     this.authenticationService = authenticationService;
   }
 

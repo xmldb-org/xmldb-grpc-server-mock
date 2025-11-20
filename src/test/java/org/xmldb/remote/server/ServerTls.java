@@ -38,7 +38,7 @@ public class ServerTls implements AuthenticationService {
 
   private void start() throws IOException {
     server = Grpc.newServerBuilderForPort(port, credentials) //
-        .intercept(new ServerCallHandler(this)) //
+        .intercept(new AuthenticationHandler(this)) //
         .addService(new XmlDbService()) //
         .build().start();
     LOGGER.info("Server started, listening on {}", port);

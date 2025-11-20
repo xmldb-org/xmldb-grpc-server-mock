@@ -25,8 +25,8 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
 @GrpcService
-public class XmlDbServiceImpl implements XmlDbService {
-  private static final Logger LOGGER = LoggerFactory.getLogger(XmlDbServiceImpl.class);
+public class MockXmlDbService implements XmlDbService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(MockXmlDbService.class);
 
   @Override
   public Uni<SystemInfo> systemInfo(EmptyRequest request) {
