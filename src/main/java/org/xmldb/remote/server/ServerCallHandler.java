@@ -16,6 +16,9 @@ import static org.xmldb.remote.server.AuthenticationConstants.CONTEXT_USERNAME_K
 
 import java.util.Base64;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Strings;
 
 import io.grpc.Context;
@@ -25,6 +28,7 @@ import io.grpc.ServerCall;
 import io.grpc.ServerInterceptor;
 
 public final class ServerCallHandler implements ServerInterceptor {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ServerCallHandler.class);
   public static final Metadata.Key<String> AUTHENTICATION =
       Metadata.Key.of("Authentication", ASCII_STRING_MARSHALLER);
 
@@ -37,18 +41,20 @@ public final class ServerCallHandler implements ServerInterceptor {
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> serverCall,
       Metadata metadata, io.grpc.ServerCallHandler<ReqT, RespT> serverCallHandler) {
-    String header = metadata.get(AUTHENTICATION);
-
+    final String header = metadata.get(AUTHENTICATION);
     if (Strings.isNullOrEmpty(header)) {
+      LOGGER.error("No authentication header provided");
       serverCall.close(UNAUTHENTICATED.withDescription("No authentication header"), metadata);
     } else {
-      String token = new String(Base64.getDecoder().decode(header), UTF_8);
       try {
-        String username = authenticationService.validateToken(token);
+        LOGGER.info("Authentication header: {}", header);
+        String username = authenticationService.validateToken(header);
         Context context = Context.current().withValue(CONTEXT_USERNAME_KEY, username);
         return Contexts.interceptCall(context, serverCall, metadata, serverCallHandler);
       } catch (AccessDeniedException e) {
-        serverCall.close(UNAUTHENTICATED.withDescription("Rejected by Authentication Service"),
+        LOGGER.error("Access denied", e);
+        serverCall.close(
+            UNAUTHENTICATED.withCause(e).withDescription("Rejected by Authentication Service"),
             metadata);
       }
     }

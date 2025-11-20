@@ -12,7 +12,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.slf4j.Logger;
@@ -71,9 +70,6 @@ public class ServerTls implements AuthenticationService {
 
   @Override
   public String validateToken(String authentication) throws AccessDeniedException {
-    if (credentials == null) {
-      throw new AccessDeniedException("No token provided");
-    }
     try {
       var basicAuth = new String(Base64.getDecoder().decode(authentication), UTF_8);
       int index = basicAuth.indexOf(':');
@@ -119,7 +115,7 @@ public class ServerTls implements AuthenticationService {
       final ServerTls server = new ServerTls(Integer.parseInt(args[0]), serverCredentials);
       server.start();
       server.blockUntilShutdown();
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       LOGGER.error("Failed to start server", e);
     }
   }
