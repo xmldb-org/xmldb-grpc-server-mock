@@ -20,7 +20,10 @@ reckon {
 
 rootProject.name = 'xmldb-grpc-server-mock'
 
-def xmldbApi = new File(rootDir, '../xmldb-api')
-if (xmldbApi.isDirectory()) {
-    includeBuild xmldbApi
+def projectCandidates = ['../xmldb-api', '../xmldb-remote']
+for (projectCandidate in projectCandidates) {
+    def project = new File(rootDir, projectCandidate)
+    if (project.isDirectory()) {
+        includeBuild project
+    }
 }
