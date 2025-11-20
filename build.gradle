@@ -71,6 +71,10 @@ compileJava {
   options.compilerArgs << '-Xlint:unchecked'
 }
 
+licenseMain {
+  dependsOn 'compileQuarkusGeneratedSourcesJava'
+}
+
 jar {
   manifest.attributes 'Implementation-Title': 'XML:DB API specification',
                       'Specification-Title': 'XML:DB API specification',
@@ -78,19 +82,15 @@ jar {
 }
 
 tasks.withType(JavaCompile).configureEach {
-  dependsOn 'spotlessJavaApply'
+  dependsOn 'spotlessJavaApply', 'quarkusGenerateCode'
 }
 
 tasks.withType(Jar).configureEach {
-    dependsOn 'quarkusGenerateCode'
-}
-
-tasks.withType(nl.javadude.gradle.plugins.license.License).configureEach {
-  dependsOn 'quarkusGenerateCode'
+  dependsOn 'compileQuarkusGeneratedSourcesJava'
 }
 
 tasks.withType(com.diffplug.gradle.spotless.SpotlessTask).configureEach {
-  mustRunAfter 'quarkusGenerateCode'
+  dependsOn 'quarkusGenerateCode'
 }
 
 spotless {
