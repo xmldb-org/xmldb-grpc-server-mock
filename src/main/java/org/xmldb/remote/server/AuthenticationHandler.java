@@ -24,10 +24,12 @@ import io.grpc.Metadata;
 import io.grpc.Metadata.Key;
 import io.grpc.ServerCall;
 import io.grpc.ServerInterceptor;
+import io.quarkus.grpc.GlobalInterceptor;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 @ApplicationScoped
+@GlobalInterceptor
 public class AuthenticationHandler implements ServerInterceptor {
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationHandler.class);
 

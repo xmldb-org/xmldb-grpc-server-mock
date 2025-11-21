@@ -8,6 +8,14 @@
  */
 package org.xmldb.remote.server;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +24,23 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class MockAuthenticationService implements AuthenticationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(MockAuthenticationService.class);
+  private static final Pattern BASIC_PATTERN =
+      Pattern.compile("^Basic (?<authString>.*)$", CASE_INSENSITIVE);
 
   @Override
-  public String validateToken(String authentication) throws AccessDeniedException {
+  public String validateToken(final String authentication) throws AccessDeniedException {
     LOGGER.info("validateToken({})", authentication);
-    return "";
+    final Matcher matcher = BASIC_PATTERN.matcher(authentication);
+    if (matcher.matches()) {
+      final String authString =
+          new String(Base64.getDecoder().decode(matcher.group("authString")), UTF_8);
+      LOGGER.info("authString({})", authString);
+      if (":".equals(authString)) {
+        return "anonymous";
+      } else {
+        return authString.split(":")[0];
+      }
+    }
+    throw new AccessDeniedException("Access denied");
   }
 }

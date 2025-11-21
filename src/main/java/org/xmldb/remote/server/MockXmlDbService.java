@@ -8,18 +8,24 @@
  */
 package org.xmldb.remote.server;
 
+import static org.xmldb.remote.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmldb.api.grpc.CollectionMeta;
 import org.xmldb.api.grpc.CountRequest;
 import org.xmldb.api.grpc.CountValue;
+import org.xmldb.api.grpc.Data;
 import org.xmldb.api.grpc.EmptyRequest;
 import org.xmldb.api.grpc.IdRequest;
 import org.xmldb.api.grpc.IdValue;
+import org.xmldb.api.grpc.NameRequest;
 import org.xmldb.api.grpc.Resource;
 import org.xmldb.api.grpc.ResourceRequest;
 import org.xmldb.api.grpc.SystemInfo;
 import org.xmldb.api.grpc.XmlDbService;
 
+import io.grpc.Context;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -30,7 +36,7 @@ public class MockXmlDbService implements XmlDbService {
 
   @Override
   public Uni<SystemInfo> systemInfo(EmptyRequest request) {
-    LOGGER.info("getSystemInfo({})", request);
+    LOGGER.info("systemInfo({})", request);
     final var systemInfoBuilder = SystemInfo.newBuilder();
     systemInfoBuilder.getJavaVersionBuilder() //
         .setDate(System.getProperty("java.version.date")) //
@@ -39,6 +45,14 @@ public class MockXmlDbService implements XmlDbService {
         .setVendorVersion(System.getProperty("java.vendor.version"));
     systemInfoBuilder.setSystemVersion("1.0.0");
     return Uni.createFrom().item(systemInfoBuilder.build());
+  }
+
+  @Override
+  public Uni<CollectionMeta> collection(NameRequest request) {
+    LOGGER.info("collection({})", request);
+    String userName = CONTEXT_USERNAME_KEY.get();
+    return Uni.createFrom()
+        .failure(new RuntimeException("Access denied for user " + userName + ""));
   }
 
   @Override
@@ -63,6 +77,11 @@ public class MockXmlDbService implements XmlDbService {
 
   @Override
   public Multi<IdValue> documentIds(IdRequest request) {
+    return Multi.createFrom().empty();
+  }
+
+  @Override
+  public Multi<Data> resourceData(IdRequest request) {
     return Multi.createFrom().empty();
   }
 }
