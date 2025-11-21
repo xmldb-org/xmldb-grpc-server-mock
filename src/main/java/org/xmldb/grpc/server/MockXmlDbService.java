@@ -6,9 +6,9 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.xmldb.remote.server;
+package org.xmldb.grpc.server;
 
-import static org.xmldb.remote.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
+import static org.xmldb.grpc.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

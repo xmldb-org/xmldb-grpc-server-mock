@@ -6,20 +6,18 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
+package org.xmldb.grpc.server.mockdb;
 
-package org.xmldb.remote.server;
+import java.time.Instant;
+import java.util.Objects;
 
-/**
- * Signals that the access has been denied.
- */
-public class AccessDeniedException extends Exception {
-  private static final long serialVersionUID = 1L;
-
-  public AccessDeniedException(String message) {
-    super(message);
+public record TestCollectionData(String name, Instant creation) {
+  public TestCollectionData(String name) {
+    this(name, Instant.now());
   }
 
-  public AccessDeniedException(String message, Throwable cause) {
-    super(message, cause);
+  public TestCollectionData {
+    Objects.requireNonNull(name);
+    Objects.requireNonNull(creation);
   }
 }

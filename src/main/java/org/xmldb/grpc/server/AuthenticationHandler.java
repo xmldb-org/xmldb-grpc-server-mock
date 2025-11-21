@@ -7,11 +7,11 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.xmldb.remote.server;
+package org.xmldb.grpc.server;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Status.UNAUTHENTICATED;
-import static org.xmldb.remote.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
+import static org.xmldb.grpc.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,6 @@ import com.google.common.base.Strings;
 import io.grpc.Context;
 import io.grpc.Contexts;
 import io.grpc.Metadata;
-import io.grpc.Metadata.Key;
 import io.grpc.ServerCall;
 import io.grpc.ServerInterceptor;
 import io.quarkus.grpc.GlobalInterceptor;
@@ -33,8 +32,8 @@ import jakarta.inject.Inject;
 public class AuthenticationHandler implements ServerInterceptor {
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationHandler.class);
 
-  public static final Key<String> AUTHENTICATION =
-      Key.of("Authentication", ASCII_STRING_MARSHALLER);
+  public static final Metadata.Key<String> AUTHENTICATION =
+      Metadata.Key.of("Authentication", ASCII_STRING_MARSHALLER);
 
   private final AuthenticationService authenticationService;
 

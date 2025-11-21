@@ -7,7 +7,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.xmldb.remote.server;
+package org.xmldb.grpc.server;
 
 public interface AuthenticationService {
   String validateToken(String authentication) throws AccessDeniedException;

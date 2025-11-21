@@ -6,12 +6,11 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.xmldb.remote.server;
+package org.xmldb.grpc.server;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

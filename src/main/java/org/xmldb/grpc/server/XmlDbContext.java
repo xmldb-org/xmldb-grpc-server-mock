@@ -6,7 +6,7 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.xmldb.remote.server;
+package org.xmldb.grpc.server;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,10 +26,10 @@ import org.xmldb.api.grpc.HandleId;
 import org.xmldb.api.grpc.ResourceId;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.grpc.RootCollectionName;
-import org.xmldb.mockdb.TestBinaryResource;
-import org.xmldb.mockdb.TestCollection;
-import org.xmldb.mockdb.TestDatabase;
-import org.xmldb.mockdb.TestXMLResource;
+import org.xmldb.grpc.server.mockdb.TestBinaryResource;
+import org.xmldb.grpc.server.mockdb.TestCollection;
+import org.xmldb.grpc.server.mockdb.TestDatabase;
+import org.xmldb.grpc.server.mockdb.TestXMLResource;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;

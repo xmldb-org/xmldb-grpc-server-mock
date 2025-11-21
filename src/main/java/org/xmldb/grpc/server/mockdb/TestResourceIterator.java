@@ -6,17 +6,21 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.xmldb.mockdb;
+package org.xmldb.grpc.server.mockdb;
 
-import org.xmldb.api.base.Collection;
-import org.xmldb.api.modules.BinaryResource;
+import org.xmldb.api.base.Resource;
+import org.xmldb.api.base.ResourceIterator;
 
-public class TestBinaryResource extends TestBaseResource implements BinaryResource {
-  public TestBinaryResource() {
-    this(null, null);
+public class TestResourceIterator implements ResourceIterator {
+
+  @Override
+  public boolean hasMoreResources() {
+    return false;
   }
 
-  public TestBinaryResource(String id, Collection parentCollection) {
-    super(id, parentCollection);
+  @Override
+  public Resource nextResource() {
+    return null;
   }
+
 }

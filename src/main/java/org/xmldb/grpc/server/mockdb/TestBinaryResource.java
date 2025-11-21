@@ -6,13 +6,17 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
+package org.xmldb.grpc.server.mockdb;
 
-package org.xmldb.remote.server;
+import org.xmldb.api.base.Collection;
+import org.xmldb.api.modules.BinaryResource;
 
-import io.grpc.Context;
+public class TestBinaryResource extends TestBaseResource implements BinaryResource {
+  public TestBinaryResource() {
+    this(null, null);
+  }
 
-public final class AuthenticationConstants {
-  public static final Context.Key<String> CONTEXT_USERNAME_KEY = Context.key("username");
-
-  private AuthenticationConstants() {}
+  public TestBinaryResource(String id, Collection parentCollection) {
+    super(id, parentCollection);
+  }
 }

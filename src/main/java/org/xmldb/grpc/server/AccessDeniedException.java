@@ -6,21 +6,20 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.xmldb.mockdb;
 
-import org.xmldb.api.base.Resource;
-import org.xmldb.api.base.ResourceIterator;
+package org.xmldb.grpc.server;
 
-public class TestResourceIterator implements ResourceIterator {
+/**
+ * Signals that the access has been denied.
+ */
+public class AccessDeniedException extends Exception {
+  private static final long serialVersionUID = 1L;
 
-  @Override
-  public boolean hasMoreResources() {
-    return false;
+  public AccessDeniedException(String message) {
+    super(message);
   }
 
-  @Override
-  public Resource nextResource() {
-    return null;
+  public AccessDeniedException(String message, Throwable cause) {
+    super(message, cause);
   }
-
 }

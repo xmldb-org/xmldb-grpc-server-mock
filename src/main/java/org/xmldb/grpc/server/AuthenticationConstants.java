@@ -6,18 +6,13 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.xmldb.mockdb;
 
-import java.time.Instant;
-import java.util.Objects;
+package org.xmldb.grpc.server;
 
-public record TestCollectionData(String name, Instant creation) {
-  public TestCollectionData(String name) {
-    this(name, Instant.now());
-  }
+import io.grpc.Context;
 
-  public TestCollectionData {
-    Objects.requireNonNull(name);
-    Objects.requireNonNull(creation);
-  }
+public final class AuthenticationConstants {
+  public static final Context.Key<String> CONTEXT_USERNAME_KEY = Context.key("username");
+
+  private AuthenticationConstants() {}
 }
