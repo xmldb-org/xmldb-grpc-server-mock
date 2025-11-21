@@ -51,12 +51,12 @@ public class AuthenticationHandler implements ServerInterceptor {
       serverCall.close(UNAUTHENTICATED.withDescription("No authentication header"), metadata);
     } else {
       try {
-        LOGGER.info("Authentication header: {}", header);
+        LOGGER.debug("Processing authentication header: {}", header);
         String username = authenticationService.validateToken(header);
         Context context = Context.current().withValue(CONTEXT_USERNAME_KEY, username);
         return Contexts.interceptCall(context, serverCall, metadata, serverCallHandler);
       } catch (AccessDeniedException e) {
-        LOGGER.error("Access denied", e);
+        LOGGER.debug("Access denied for processed header", e);
         serverCall.close(
             UNAUTHENTICATED.withCause(e).withDescription("Rejected by Authentication Service"),
             metadata);

@@ -17,6 +17,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmldb.api.base.Collection;
+import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
@@ -25,6 +26,7 @@ import org.xmldb.api.grpc.Empty;
 import org.xmldb.api.grpc.HandleId;
 import org.xmldb.api.grpc.ResourceId;
 import org.xmldb.api.grpc.ResourceMeta;
+import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.api.grpc.RootCollectionName;
 import org.xmldb.grpc.server.mockdb.TestBinaryResource;
 import org.xmldb.grpc.server.mockdb.TestCollection;
@@ -40,10 +42,12 @@ public class XmlDbContext {
 
   private final TestDatabase db;
   private final Map<HandleId, Collection> openCollections;
+  private final Map<HandleId, Resource> openResources;
 
   public XmlDbContext() {
     db = new TestDatabase();
     openCollections = new HashMap<>();
+    openResources = new HashMap<>();
     TestCollection rootCollection = db.addCollection("/db");
     rootCollection.addResource("test1.xml", TestXMLResource::new);
     rootCollection.addResource("test2.xml", TestBinaryResource::new);
@@ -59,7 +63,7 @@ public class XmlDbContext {
   }
 
   private Uni<CollectionMeta> registerCollection(Collection collection) throws XMLDBException {
-    HandleId handleId = createHandleId();
+    final HandleId handleId = createHandleId();
     openCollections.put(handleId, collection);
     return Uni.createFrom()
         .item(CollectionMeta.newBuilder().setCollectionId(handleId)
@@ -67,93 +71,120 @@ public class XmlDbContext {
             .setName(collection.getName()).build());
   }
 
-  public Uni<CollectionMeta> openCollection(RootCollectionName rootCollectionName) {
+  private Uni<ResourceMeta> registerResource(Resource resource) throws XMLDBException {
+    final HandleId handleId = createHandleId();
+    openResources.put(handleId, resource);
+    return Uni.createFrom()
+        .item(ResourceMeta.newBuilder().setType(convert(resource.getResourceType()))
+            .setCreationTime(resource.getCreationTime().toEpochMilli())
+            .setLastModificationTime(resource.getLastModificationTime().toEpochMilli()).build());
+  }
+
+  private ResourceType convert(org.xmldb.api.base.ResourceType resourceType) {
+    return switch (resourceType) {
+      case BINARY_RESOURCE -> ResourceType.BINARY;
+      case XML_RESOURCE -> ResourceType.XML;
+    };
+  }
+
+  Uni<CollectionMeta> openCollection(RootCollectionName rootCollectionName) {
     try {
       final String path = rootCollectionName.getUri().replaceFirst("^.+/", "/");
       final Properties info = new Properties();
-      LOGGER.info("Opening collection at path: {}", path);
+      LOGGER.info("Opening root collection: {}", path);
       info.putAll(rootCollectionName.getInfoMap());
-      Collection collection = db.getCollection(path, info);
+      final Collection collection = db.getCollection(path, info);
       return registerCollection(collection);
     } catch (XMLDBException e) {
-      LOGGER.error("Error opening collection {}", rootCollectionName, e);
+      LOGGER.error("Error opening root collection {}", rootCollectionName, e);
       return Uni.createFrom().failure(e);
     }
   }
 
-  public Uni<CollectionMeta> openCollection(ChildCollectionName collectionName) {
+  Uni<CollectionMeta> openCollection(ChildCollectionName childCollectionName) {
     try {
-      Collection parentCollection = openCollections.get(collectionName.getCollectionId());
-      Collection collection = parentCollection.getChildCollection(collectionName.getChildName());
+      final Collection parentCollection =
+          openCollections.get(childCollectionName.getCollectionId());
+      final String childName = childCollectionName.getChildName();
+      LOGGER.info("Opening child collection: {}/{}", parentCollection.getName(), childName);
+      final Collection collection = parentCollection.getChildCollection(childName);
       return registerCollection(collection);
     } catch (XMLDBException e) {
-      LOGGER.error("Error opening collection {}", collectionName, e);
+      LOGGER.error("Error opening child collection {}", childCollectionName, e);
       return Uni.createFrom().failure(e);
     }
   }
 
-  public Uni<Empty> closeCollection(HandleId request) {
+  Uni<Empty> closeCollection(HandleId handleId) {
     try {
-      Collection collection = openCollections.remove(request);
+      final Collection collection = openCollections.remove(handleId);
       if (collection == null) {
-        LOGGER.warn("Collection {} not found", request);
+        LOGGER.warn("Collection {} not found", handleId);
       } else {
+        LOGGER.info("Closing Collection {}", collection.getName());
         collection.close();
       }
       return Uni.createFrom().item(EMPTY);
     } catch (XMLDBException e) {
+      LOGGER.error("Error closing collection {}", handleId, e);
       return Uni.createFrom().failure(e);
     }
   }
 
-  public Uni<Count> resourceCount(HandleId request) {
+  Uni<Count> resourceCount(HandleId handleId) {
     try {
-      Collection collection = openCollections.get(request);
+      final Collection collection = openCollections.get(handleId);
       return Uni.createFrom()
           .item(Count.newBuilder().setCount(collection.getResourceCount()).build());
     } catch (XMLDBException e) {
-      LOGGER.error("Error getting resource count for {}", request, e);
+      LOGGER.error("Error getting resource count for {}", handleId, e);
       return Uni.createFrom().failure(e);
     }
   }
 
-  public Multi<ResourceId> listResources(HandleId request) {
+  Multi<ResourceId> listResources(HandleId handleId) {
     try {
-      Collection collection = openCollections.get(request);
-      List<ResourceId> resources = collection.listResources().stream()
+      final Collection collection = openCollections.get(handleId);
+      final List<ResourceId> resources = collection.listResources().stream()
           .map(resourceId -> ResourceId.newBuilder().setResourceId(resourceId).build()).toList();
       return Multi.createFrom().iterable(resources);
     } catch (XMLDBException e) {
-      LOGGER.error("Error getting resource count for {}", request, e);
+      LOGGER.error("Error listing resources for {}", handleId, e);
       return Multi.createFrom().failure(e);
     }
   }
 
-  public Uni<Count> collectionCount(HandleId request) {
+  Uni<Count> collectionCount(HandleId handleId) {
     try {
-      Collection collection = openCollections.get(request);
+      final Collection collection = openCollections.get(handleId);
       return Uni.createFrom()
           .item(Count.newBuilder().setCount(collection.getChildCollectionCount()).build());
     } catch (XMLDBException e) {
-      LOGGER.error("Error getting resource count for {}", request, e);
+      LOGGER.error("Error getting collection count for {}", handleId, e);
       return Uni.createFrom().failure(e);
     }
   }
 
-  public Multi<ChildCollectionName> childCollections(HandleId request) {
+  Multi<ChildCollectionName> childCollections(HandleId handleId) {
     try {
-      Collection collection = openCollections.get(request);
+      final Collection collection = openCollections.get(handleId);
       List<ChildCollectionName> resources =
           collection.listChildCollections().stream().map(name -> ChildCollectionName.newBuilder()
-              .setCollectionId(request).setChildName(name).build()).toList();
+              .setCollectionId(handleId).setChildName(name).build()).toList();
       return Multi.createFrom().iterable(resources);
     } catch (XMLDBException e) {
-      LOGGER.error("Error getting resource count for {}", request, e);
+      LOGGER.error("Error getting child collections for {}", handleId, e);
       return Multi.createFrom().failure(e);
     }
   }
 
-  public Uni<ResourceMeta> resource(ResourceId request) {
-    return Uni.createFrom().nullItem();
+  Uni<ResourceMeta> resource(ResourceId request) {
+    try {
+      final Collection collection = openCollections.get(request.getCollectionId());
+      return registerResource(collection.getResource(request.getResourceId()));
+    } catch (XMLDBException e) {
+      LOGGER.error("Error getting resource for {}", request, e);
+      return Uni.createFrom().failure(e);
+    }
   }
 }

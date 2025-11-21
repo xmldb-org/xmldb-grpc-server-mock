@@ -28,12 +28,11 @@ public class MockAuthenticationService implements AuthenticationService {
 
   @Override
   public String validateToken(final String authentication) throws AccessDeniedException {
-    LOGGER.info("validateToken({})", authentication);
+    LOGGER.debug("validateToken({})", authentication);
     final Matcher matcher = BASIC_PATTERN.matcher(authentication);
     if (matcher.matches()) {
       final String authString =
           new String(Base64.getDecoder().decode(matcher.group("authString")), UTF_8);
-      LOGGER.info("authString({})", authString);
       if (":".equals(authString)) {
         return "anonymous";
       } else {

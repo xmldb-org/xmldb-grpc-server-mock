@@ -9,6 +9,24 @@
 
 package org.xmldb.grpc.server;
 
+/**
+ * The AuthenticationService interface provides a contract for validating authorization tokens.
+ * Implementations of this interface are responsible for interpreting the provided authentication
+ * token, extracting relevant credentials, and verifying the user's access rights.
+ *
+ * The validation process may throw an AccessDeniedException if the token is invalid, improperly
+ * formatted, or if access is denied due to insufficient privileges.
+ */
 public interface AuthenticationService {
+  /**
+   * Validates the provided authentication token and returns associated user information. The method
+   * interprets the given token, extracts credentials, and verifies access rights.
+   *
+   * @param authentication the authentication token used for validating access, typically provided
+   *        as a string representation of a JWT, session token, or similar credential.
+   * @return the validated username if the token is valid and authentication is successful.
+   * @throws AccessDeniedException if the token is invalid, improperly formatted, expired, or if the
+   *         user lacks necessary access permissions.
+   */
   String validateToken(String authentication) throws AccessDeniedException;
 }
