@@ -10,7 +10,7 @@ package org.xmldb.remote.server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xmldb.api.grpc.EmptyRequest;
+import org.xmldb.api.grpc.Empty;
 import org.xmldb.api.grpc.SystemInfo;
 import org.xmldb.api.grpc.XmlDbServiceGrpc;
 
@@ -20,7 +20,7 @@ public class XmlDbService extends XmlDbServiceGrpc.XmlDbServiceImplBase {
   private static final Logger LOGGER = LoggerFactory.getLogger(XmlDbService.class);
 
   @Override
-  public void systemInfo(EmptyRequest request, StreamObserver<SystemInfo> responseObserver) {
+  public void systemInfo(Empty request, StreamObserver<SystemInfo> responseObserver) {
     LOGGER.info("getSystemInfo({})", request);
     final var systemInfoBuilder = SystemInfo.newBuilder();
     systemInfoBuilder.getJavaVersionBuilder() //

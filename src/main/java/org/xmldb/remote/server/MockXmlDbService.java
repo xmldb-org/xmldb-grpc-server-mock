@@ -10,22 +10,23 @@ package org.xmldb.remote.server;
 
 import static org.xmldb.remote.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
-import org.xmldb.api.grpc.CountRequest;
-import org.xmldb.api.grpc.CountValue;
+import org.xmldb.api.grpc.Count;
 import org.xmldb.api.grpc.Data;
-import org.xmldb.api.grpc.EmptyRequest;
-import org.xmldb.api.grpc.IdRequest;
-import org.xmldb.api.grpc.IdValue;
-import org.xmldb.api.grpc.NameRequest;
-import org.xmldb.api.grpc.Resource;
-import org.xmldb.api.grpc.ResourceRequest;
+import org.xmldb.api.grpc.Empty;
+import org.xmldb.api.grpc.HandleId;
+import org.xmldb.api.grpc.ResourceId;
+import org.xmldb.api.grpc.ResourceMeta;
+import org.xmldb.api.grpc.RootCollectionName;
 import org.xmldb.api.grpc.SystemInfo;
 import org.xmldb.api.grpc.XmlDbService;
 
-import io.grpc.Context;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -34,8 +35,14 @@ import io.smallrye.mutiny.Uni;
 public class MockXmlDbService implements XmlDbService {
   private static final Logger LOGGER = LoggerFactory.getLogger(MockXmlDbService.class);
 
+  private final ConcurrentMap<String, XmlDbContext> contexts;
+
+  public MockXmlDbService() {
+    this.contexts = new ConcurrentHashMap<>();
+  }
+
   @Override
-  public Uni<SystemInfo> systemInfo(EmptyRequest request) {
+  public Uni<SystemInfo> systemInfo(Empty request) {
     LOGGER.info("systemInfo({})", request);
     final var systemInfoBuilder = SystemInfo.newBuilder();
     systemInfoBuilder.getJavaVersionBuilder() //
@@ -48,40 +55,61 @@ public class MockXmlDbService implements XmlDbService {
   }
 
   @Override
-  public Uni<CollectionMeta> collection(NameRequest request) {
-    LOGGER.info("collection({})", request);
-    String userName = CONTEXT_USERNAME_KEY.get();
-    return Uni.createFrom()
-        .failure(new RuntimeException("Access denied for user " + userName + ""));
+  public Uni<CollectionMeta> openRootCollection(RootCollectionName request) {
+    LOGGER.info("openRootCollection({})", request);
+    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
+        .openCollection(request);
   }
 
   @Override
-  public Uni<CountValue> collectionCount(CountRequest request) {
-    return Uni.createFrom().nullItem();
+  public Uni<CollectionMeta> openChildCollection(ChildCollectionName request) {
+    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
+        .openCollection(request);
   }
 
   @Override
-  public Uni<CountValue> documentCount(EmptyRequest request) {
-    return Uni.createFrom().nullItem();
+  public Uni<Empty> closeCollection(HandleId request) {
+    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
+        .closeCollection(request);
   }
 
   @Override
-  public Uni<Resource> resource(ResourceRequest request) {
-    return Uni.createFrom().nullItem();
+  public Uni<Count> collectionCount(HandleId request) {
+    LOGGER.info("collectionCount({})", request);
+    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
+        .collectionCount(request);
   }
 
   @Override
-  public Multi<IdValue> collectionIds(IdRequest request) {
-    return Multi.createFrom().empty();
+  public Uni<Count> resourceCount(HandleId request) {
+    LOGGER.info("resourceCount({})", request);
+    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
+        .resourceCount(request);
   }
 
   @Override
-  public Multi<IdValue> documentIds(IdRequest request) {
-    return Multi.createFrom().empty();
+  public Uni<ResourceMeta> resource(ResourceId request) {
+    LOGGER.info("resource({})", request);
+    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
+        .resource(request);
   }
 
   @Override
-  public Multi<Data> resourceData(IdRequest request) {
+  public Multi<ChildCollectionName> childCollections(HandleId request) {
+    LOGGER.info("childCollections({})", request);
+    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
+        .childCollections(request);
+  }
+
+  @Override
+  public Multi<ResourceId> listResources(HandleId request) {
+    LOGGER.info("listResources({})", request);
+    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
+        .listResources(request);
+  }
+
+  @Override
+  public Multi<Data> resourceData(HandleId request) {
     return Multi.createFrom().empty();
   }
 }
