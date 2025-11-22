@@ -28,7 +28,7 @@ import org.xmldb.api.modules.XMLResource;
 public class TestCollection extends ConfigurableImpl implements Collection {
   private final TestCollectionData data;
   private final ConcurrentMap<String, Collection> childCollections;
-  private final ConcurrentMap<String, Resource> resources;
+  private final ConcurrentMap<String, Resource<?>> resources;
 
   private boolean closed;
   private Collection parent;
@@ -48,9 +48,9 @@ public class TestCollection extends ConfigurableImpl implements Collection {
     return new TestCollection(new TestCollectionData(name));
   }
 
-  public <T extends TestBaseResource> T addResource(String id,
-      BiFunction<String, Collection, T> createAction) {
-    T resource = createAction.apply(id, this);
+  public <T, R extends TestBaseResource<T>> R addResource(String id,
+      BiFunction<String, Collection, R> createAction) {
+    R resource = createAction.apply(id, this);
     resources.put(resource.getId(), resource);
     return resource;
   }
@@ -110,7 +110,8 @@ public class TestCollection extends ConfigurableImpl implements Collection {
   }
 
   @Override
-  public <R extends Resource> R createResource(String id, Class<R> type) throws XMLDBException {
+  public <T, R extends Resource<T>> R createResource(String id, Class<R> type)
+      throws XMLDBException {
     if (BinaryResource.class.equals(type)) {
       return type.cast(new TestBinaryResource(id, this));
     } else if (XMLResource.class.equals(type)) {
@@ -120,17 +121,17 @@ public class TestCollection extends ConfigurableImpl implements Collection {
   }
 
   @Override
-  public void removeResource(Resource res) throws XMLDBException {
+  public void removeResource(Resource<?> res) throws XMLDBException {
     resources.remove(res.getId());
   }
 
   @Override
-  public void storeResource(Resource res) throws XMLDBException {
+  public void storeResource(Resource<?> res) throws XMLDBException {
     resources.put(res.getId(), res);
   }
 
   @Override
-  public Resource getResource(String id) {
+  public Resource<?> getResource(String id) {
     return resources.get(id);
   }
 
