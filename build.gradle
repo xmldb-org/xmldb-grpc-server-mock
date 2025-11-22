@@ -11,25 +11,11 @@ plugins {
   id 'eclipse'
   id 'idea'
   id 'java-library'
-  id 'java-test-fixtures'
   id 'io.quarkus' version '3.30.0'
   id 'com.diffplug.spotless' version '8.1.0'
-  id 'org.kordamp.gradle.java-project' version '0.54.0'
 }
-
-apply {
-  plugin 'org.kordamp.gradle.checkstyle'
-  plugin 'org.kordamp.gradle.errorprone'
-  plugin 'org.kordamp.gradle.sonar'
-}
-
-if (!project.hasProperty('sonatypeUsername')) ext.sonatypeUsername = '**undefined**'
-if (!project.hasProperty('sonatypePassword')) ext.sonatypePassword = '**undefined**'
-if (!project.hasProperty('sonarToken')) ext.sonarToken = '**undefined**'
 
 group = 'net.sf.xmldb-org'
-
-defaultTasks 'build'
 
 java {
   sourceCompatibility = JavaVersion.VERSION_21
@@ -52,7 +38,8 @@ dependencies {
   implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.29.4')
   implementation 'io.quarkus:quarkus-grpc'
   implementation 'io.quarkus:quarkus-arc'
-  implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-protobuf-SNAPSHOT'
+  implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-SNAPSHOT'
+  implementation 'net.sf.xmldb-org:xmldb-grpc-client:0.1.0-SNAPSHOT:proto'
 
   runtimeOnly 'ch.qos.logback:logback-classic:1.5.21'
 
@@ -68,10 +55,6 @@ dependencies {
 
 compileJava {
   options.compilerArgs << '-Xlint:unchecked'
-}
-
-licenseMain {
-  dependsOn 'compileQuarkusGeneratedSourcesJava'
 }
 
 jar {
@@ -104,105 +87,5 @@ test {
   useJUnitPlatform()
   testLogging {
     events 'skipped'
-  }
-}
-
-config {
-  release = !project.version.toString().endsWith('-SNAPSHOT')
-  info {
-    vendor = 'reinhapa'
-    name = 'XML:DB Proto buffers remote client'
-    description = 'XML:DB Initiative for XML Databases'
-    inceptionYear = '2023'
-    links {
-      website = 'https://github.com/xmldb-org/xmldb-remote'
-      issueTracker = 'https://github.com/xmldb-org/xmldb-remote/issues'
-      scm = 'https://github.com/xmldb-org/xmldb-remote.git'
-    }
-    scm {
-      connection = 'scm:git://github.com/xmldb-org/xmldb-remote.git'
-      developerConnection = 'scm:git://github.com/xmldb-org/xmldb-remote.git'
-      url = 'https://github.com/xmldb-org/xmldb-remote'
-    }
-    organization {
-      name = 'XML:DB Initiative for XML Databases'
-      url = 'https://github.com/xmldb-org'
-    }
-    people {
-      person {
-        id = 'xmldb-remote'
-        name = 'XML:DB Initiative'
-        roles = [ 'owner' ]
-      }
-      person {
-        id = 'reinhapa'
-        name = 'Patrick Reinhart'
-        email = 'patrick@reini.net'
-        roles = [ 'developer' ]
-      }
-    }
-    repositories {
-      repository {
-        name = 'sonatypeRelease'
-        url  = 'https://ossrh-staging-api.central.sonatype.com/service/local/'
-        credentials {
-          username = sonatypeUsername
-          password = sonatypePassword
-        }
-      }
-      repository {
-        name = 'sonatypeSnapshot'
-        url  = 'https://central.sonatype.com/repository/maven-snapshots/'
-        credentials {
-          username = sonatypeUsername
-          password = sonatypePassword
-        }
-      }
-    }
-  }
-  quality {
-    errorprone {
-      errorProneVersion = '2.28.0'
-      excludedPaths = '.*/quarkus-generated-sources/grpc/.*'
-    }
-    sonar {
-      hostUrl = 'https://sonarcloud.io'
-      login = sonarToken
-      organization = 'xmldb-org'
-      projectKey = 'xmldb-org_xmldb-remote'
-    }
-  }
-  licensing {
-    excludes = [ 'org/xmldb/api/grpc/**' ]
-    licenses {
-      license {
-        name = 'The XML:DB Initiative Software License'
-        url = 'https://github.com/xmldb-org/xmldb-remote/raw/master/LICENSE'
-      }
-    }
-  }
-  docs {
-    javadoc {
-      autoLinks.enabled = false
-      options {
-        docTitle = "XML:DB ${project.version} grpc remote client"
-        header = "XML:DB ${project.version} grpc remote client"
-        windowTitle = "XML:DB ${project.version} grpc remote client"
-      }
-    }
-  }
-  artifacts {
-    minpom.enabled = false
-  }
-  publishing {
-    signing.enabled = release
-    releasesRepository  = 'sonatypeRelease'
-    snapshotsRepository = 'sonatypeSnapshot'
-  }
-}
-
-normalization {
-  runtimeClasspath {
-    ignore '/META-INF/MANIFEST.MF'
   }
 }

@@ -6,7 +6,7 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.xmldb.grpc.server;
+package org.xmldb.grpc.server.simple;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -16,6 +16,9 @@ import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmldb.grpc.server.AccessDeniedException;
+import org.xmldb.grpc.server.AuthenticationHandler;
+import org.xmldb.grpc.server.AuthenticationService;
 
 import io.grpc.Grpc;
 import io.grpc.InsecureServerCredentials;

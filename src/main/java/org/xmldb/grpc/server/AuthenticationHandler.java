@@ -38,7 +38,7 @@ public class AuthenticationHandler implements ServerInterceptor {
   private final AuthenticationService authenticationService;
 
   @Inject
-  AuthenticationHandler(AuthenticationService authenticationService) {
+  public AuthenticationHandler(AuthenticationService authenticationService) {
     this.authenticationService = authenticationService;
   }
 
