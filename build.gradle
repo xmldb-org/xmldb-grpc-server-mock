@@ -40,6 +40,7 @@ dependencies {
   implementation 'io.quarkus:quarkus-arc'
   implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-SNAPSHOT'
   implementation 'net.sf.xmldb-org:xmldb-grpc-client:0.1.0-SNAPSHOT:proto'
+  implementation 'net.sf.xmldb-org:xmldb-mockdb:0.1.0-SNAPSHOT'
 
   runtimeOnly 'ch.qos.logback:logback-classic:1.5.21'
 
@@ -58,8 +59,7 @@ compileJava {
 }
 
 jar {
-  manifest.attributes 'Implementation-Title': 'XML:DB API specification',
-                      'Specification-Title': 'XML:DB API specification',
+  manifest.attributes 'Implementation-Title': 'XML:DB gRPC API quarkus backend implementation',
                       'Automatic-Module-Name': "org.xmldb.remote"
 }
 

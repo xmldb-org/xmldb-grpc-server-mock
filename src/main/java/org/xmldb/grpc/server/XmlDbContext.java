@@ -28,10 +28,10 @@ import org.xmldb.api.grpc.ResourceId;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.api.grpc.RootCollectionName;
-import org.xmldb.grpc.server.mockdb.TestBinaryResource;
-import org.xmldb.grpc.server.mockdb.TestCollection;
-import org.xmldb.grpc.server.mockdb.TestDatabase;
-import org.xmldb.grpc.server.mockdb.TestXMLResource;
+import org.xmldb.mockdb.TestBinaryResource;
+import org.xmldb.mockdb.TestCollection;
+import org.xmldb.mockdb.TestDatabase;
+import org.xmldb.mockdb.TestXMLResource;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -42,7 +42,7 @@ public class XmlDbContext {
 
   private final TestDatabase db;
   private final Map<HandleId, Collection> openCollections;
-  private final Map<HandleId, Resource> openResources;
+  private final Map<HandleId, Resource<?>> openResources;
 
   public XmlDbContext() {
     db = new TestDatabase();
