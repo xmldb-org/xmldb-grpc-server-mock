@@ -12,7 +12,7 @@ plugins {
   id 'idea'
   id 'java-library'
   id 'java-test-fixtures'
-  id 'io.quarkus' version '3.29.3'
+  id 'io.quarkus' version '3.30.0'
   id 'com.diffplug.spotless' version '8.1.0'
   id 'org.kordamp.gradle.java-project' version '0.54.0'
 }
@@ -49,7 +49,7 @@ repositories {
 }
 
 dependencies {
-  implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.29.3')
+  implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.29.4')
   implementation 'io.quarkus:quarkus-grpc'
   implementation 'io.quarkus:quarkus-arc'
   implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-protobuf-SNAPSHOT'
