@@ -20,5 +20,5 @@ reckon {
 
 rootProject.name = 'xmldb-grpc-server-mock'
 
-includeBuild('../xmldb-mockdb')
+//includeBuild('../xmldb-mockdb')
 //includeBuild('../xmldb-api')
