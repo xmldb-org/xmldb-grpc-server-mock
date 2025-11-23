@@ -13,10 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmldb.api.DatabaseManager;
 import org.xmldb.api.base.Collection;
+import org.xmldb.api.base.ErrorCodes;
 import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ChildCollectionName;
@@ -28,41 +32,65 @@ import org.xmldb.api.grpc.ResourceId;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.api.grpc.RootCollectionName;
-import org.xmldb.mockdb.TestBinaryResource;
-import org.xmldb.mockdb.TestCollection;
-import org.xmldb.mockdb.TestDatabase;
-import org.xmldb.mockdb.TestXMLResource;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
+/**
+ * The {@code XmlDbContext} class provides a context for managing and interacting with a test XML
+ * database.
+ * <p>
+ * This class allows opening and closing collections, managing resources, and retrieving metadata
+ * for these entities within the database
+ * <p>
+ * It maintains mappings of currently open collections and resources for efficient lookup and
+ * operations.
+ * <p>
+ * The class primarily interacts with a test database setup and provides functionality to
+ * programmatically interact with collections and resources, ensuring that operations such as
+ * opening and closing collections, as well as fetching resource and collection information, can be
+ * performed in a structured manner.
+ * <p>
+ * Logging is handled through SLF4J for tracking key operations and errors.
+ * <p>
+ * This class uses reactive programming paradigms with {@code Uni} and {@code Multi} from Mutiny for
+ * returning asynchronous results of operations.
+ */
 public class XmlDbContext {
   private static final Logger LOGGER = LoggerFactory.getLogger(XmlDbContext.class);
   private static final Empty EMPTY = Empty.getDefaultInstance();
+  private static final Pattern SOURCE_URL_PATTERN =
+      Pattern.compile("xmldb:\\w+:(?://[\\w.:]+)?(?<path>/.+)");
 
-  private final TestDatabase db;
+  private final String dbUriPrefix;
   private final Map<HandleId, Collection> openCollections;
   private final Map<HandleId, Resource<?>> openResources;
 
-  public XmlDbContext() {
-    db = new TestDatabase();
+  /**
+   * Constructor for the XmlDbContext class. Initializes the database URI prefix and sets up
+   * internal data structures for managing open collections and resources.
+   *
+   * @param dbUriPrefix The URI prefix used as a base for accessing database collections and
+   *        resources.
+   */
+  public XmlDbContext(String dbUriPrefix) {
+    this.dbUriPrefix = dbUriPrefix;
     openCollections = new HashMap<>();
     openResources = new HashMap<>();
-    TestCollection rootCollection = db.addCollection("/db");
-    rootCollection.addResource("test1.xml", TestXMLResource::new);
-    rootCollection.addResource("test2.xml", TestBinaryResource::new);
-    TestCollection subCollection = db.addCollection("/db/child");
-    subCollection.addResource("test3.xml", TestBinaryResource::new);
-    rootCollection.addCollection("child", subCollection);
   }
 
   private static HandleId createHandleId() {
-    UUID uuid = UUID.randomUUID();
+    final UUID uuid = UUID.randomUUID();
     return HandleId.newBuilder().setMostSignificantBits(uuid.getMostSignificantBits())
         .setLeastSignificantBits(uuid.getLeastSignificantBits()).build();
   }
 
-  private Uni<CollectionMeta> registerCollection(Collection collection) throws XMLDBException {
+  private Uni<CollectionMeta> registerCollection(Collection collection, String collectionIdent)
+      throws XMLDBException {
+    if (collection == null) {
+      LOGGER.info("Collection ({}) is null, returning null item instead of error", collectionIdent);
+      return Uni.createFrom().nullItem();
+    }
     final HandleId handleId = createHandleId();
     openCollections.put(handleId, collection);
     return Uni.createFrom()
@@ -71,7 +99,7 @@ public class XmlDbContext {
             .setName(collection.getName()).build());
   }
 
-  private Uni<ResourceMeta> registerResource(Resource resource) throws XMLDBException {
+  private Uni<ResourceMeta> registerResource(Resource<?> resource) throws XMLDBException {
     final HandleId handleId = createHandleId();
     openResources.put(handleId, resource);
     return Uni.createFrom()
@@ -89,12 +117,19 @@ public class XmlDbContext {
 
   Uni<CollectionMeta> openCollection(RootCollectionName rootCollectionName) {
     try {
-      final String path = rootCollectionName.getUri().replaceFirst("^.+/", "/");
-      final Properties info = new Properties();
-      LOGGER.info("Opening root collection: {}", path);
-      info.putAll(rootCollectionName.getInfoMap());
-      final Collection collection = db.getCollection(path, info);
-      return registerCollection(collection);
+      final String originalUri = rootCollectionName.getUri();
+      final Matcher urlMatcher = SOURCE_URL_PATTERN.matcher(originalUri);
+      if (urlMatcher.matches()) {
+        final String path = urlMatcher.group("path");
+        final Properties info = new Properties();
+        LOGGER.info("Opening root collection: {}", path);
+        info.putAll(rootCollectionName.getInfoMap());
+        final Collection collection = DatabaseManager.getCollection(dbUriPrefix + path, info);
+        return registerCollection(collection, path);
+      } else {
+        LOGGER.warn("Invalid URI: {}", originalUri);
+        return Uni.createFrom().failure(new XMLDBException(ErrorCodes.INVALID_URI));
+      }
     } catch (XMLDBException e) {
       LOGGER.error("Error opening root collection {}", rootCollectionName, e);
       return Uni.createFrom().failure(e);
@@ -108,7 +143,7 @@ public class XmlDbContext {
       final String childName = childCollectionName.getChildName();
       LOGGER.info("Opening child collection: {}/{}", parentCollection.getName(), childName);
       final Collection collection = parentCollection.getChildCollection(childName);
-      return registerCollection(collection);
+      return registerCollection(collection, childName);
     } catch (XMLDBException e) {
       LOGGER.error("Error opening child collection {}", childCollectionName, e);
       return Uni.createFrom().failure(e);
@@ -119,7 +154,7 @@ public class XmlDbContext {
     try {
       final Collection collection = openCollections.remove(handleId);
       if (collection == null) {
-        LOGGER.warn("Collection {} not found", handleId);
+        LOGGER.warn("Collection not found for handle {}", handleId);
       } else {
         LOGGER.info("Closing Collection {}", collection.getName());
         collection.close();
@@ -137,7 +172,7 @@ public class XmlDbContext {
       return Uni.createFrom()
           .item(Count.newBuilder().setCount(collection.getResourceCount()).build());
     } catch (XMLDBException e) {
-      LOGGER.error("Error getting resource count for {}", handleId, e);
+      LOGGER.error("Error getting resource count for handle {}", handleId, e);
       return Uni.createFrom().failure(e);
     }
   }
@@ -178,12 +213,28 @@ public class XmlDbContext {
     }
   }
 
-  Uni<ResourceMeta> resource(ResourceId request) {
+  Uni<ResourceMeta> openResource(ResourceId request) {
     try {
       final Collection collection = openCollections.get(request.getCollectionId());
       return registerResource(collection.getResource(request.getResourceId()));
     } catch (XMLDBException e) {
       LOGGER.error("Error getting resource for {}", request, e);
+      return Uni.createFrom().failure(e);
+    }
+  }
+
+  Uni<Empty> closeResource(HandleId handleId) {
+    try {
+      final Resource<?> resource = openResources.remove(handleId);
+      if (resource == null) {
+        LOGGER.warn("Resource {} not found", handleId);
+      } else {
+        LOGGER.info("Closing resource {}", resource.getId());
+        resource.close();
+      }
+      return Uni.createFrom().item(EMPTY);
+    } catch (XMLDBException e) {
+      LOGGER.error("Error closing resource {}", handleId, e);
       return Uni.createFrom().failure(e);
     }
   }

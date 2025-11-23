@@ -19,6 +19,8 @@ group = 'net.sf.xmldb-org'
 
 java {
   sourceCompatibility = JavaVersion.VERSION_21
+  withJavadocJar()
+  withSourcesJar()
 }
 
 sourceSets {
@@ -56,6 +58,10 @@ dependencies {
 
 compileJava {
   options.compilerArgs << '-Xlint:unchecked'
+}
+
+javadoc {
+  excludes = ['org/xmldb/api/grpc/**']
 }
 
 jar {

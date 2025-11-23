@@ -11,7 +11,8 @@ package org.xmldb.grpc.server;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Status.UNAUTHENTICATED;
-import static org.xmldb.grpc.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
+import static org.xmldb.grpc.server.AuthenticationConstants.CREDENTIAL;
+import static org.xmldb.grpc.server.AuthenticationConstants.USERNAME;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,16 +28,35 @@ import io.quarkus.grpc.GlobalInterceptor;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+/**
+ * The AuthenticationHandler class serves as a gRPC {@link ServerInterceptor} to enforce
+ * authentication in server-side gRPC calls. It intercepts incoming requests, processes the
+ * authentication header, validates the provided credentials, and establishes the execution context
+ * for subsequent calls if authentication is successful.
+ * <p>
+ * This interceptor relies on the {@link AuthenticationService} to validate the authentication token
+ * and verify user credentials.
+ * <p>
+ * If the authentication fails or the header is missing, the interceptor will close the connection
+ * with an Unauthenticated status.
+ */
 @ApplicationScoped
 @GlobalInterceptor
 public class AuthenticationHandler implements ServerInterceptor {
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationHandler.class);
-
-  public static final Metadata.Key<String> AUTHENTICATION =
+  private static final Metadata.Key<String> AUTHENTICATION =
       Metadata.Key.of("Authentication", ASCII_STRING_MARSHALLER);
 
   private final AuthenticationService authenticationService;
 
+  /**
+   * Constructs an instance of the {@code AuthenticationHandler} that enforces authentication by
+   * validating access tokens through the provided {@code AuthenticationService}.
+   *
+   * @param authenticationService the service used to validate authentication tokens and retrieve
+   *        user credentials. This dependency is used to ensure that incoming requests are
+   *        legitimate and properly authorized.
+   */
   @Inject
   public AuthenticationHandler(AuthenticationService authenticationService) {
     this.authenticationService = authenticationService;
@@ -52,8 +72,9 @@ public class AuthenticationHandler implements ServerInterceptor {
     } else {
       try {
         LOGGER.debug("Processing authentication header: {}", header);
-        String username = authenticationService.validateToken(header);
-        Context context = Context.current().withValue(CONTEXT_USERNAME_KEY, username);
+        final Credentials credentials = authenticationService.validateToken(header);
+        Context context = Context.current().withValue(USERNAME, credentials.username())
+            .withValue(CREDENTIAL, credentials.password());
         return Contexts.interceptCall(context, serverCall, metadata, serverCallHandler);
       } catch (AccessDeniedException e) {
         LOGGER.debug("Access denied for processed header", e);
@@ -62,6 +83,6 @@ public class AuthenticationHandler implements ServerInterceptor {
             metadata);
       }
     }
-    return new ServerCall.Listener<ReqT>() {};
+    return new ServerCall.Listener<>() {};
   }
 }

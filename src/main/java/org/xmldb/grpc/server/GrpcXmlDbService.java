@@ -8,11 +8,12 @@
  */
 package org.xmldb.grpc.server;
 
-import static org.xmldb.grpc.server.AuthenticationConstants.CONTEXT_USERNAME_KEY;
+import static org.xmldb.grpc.server.AuthenticationConstants.USERNAME;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmldb.api.grpc.ChildCollectionName;
@@ -30,15 +31,39 @@ import org.xmldb.api.grpc.XmlDbService;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import jakarta.inject.Inject;
 
+/**
+ * A gRPC service implementation for handling operations in an XML database. This class provides
+ * methods to interact with collections, resources, and retrieve database metadata. It implements
+ * the XmlDbService interface and uses Mutiny for reactive programming.
+ */
 @GrpcService
-public class MockXmlDbService implements XmlDbService {
-  private static final Logger LOGGER = LoggerFactory.getLogger(MockXmlDbService.class);
+public class GrpcXmlDbService implements XmlDbService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(GrpcXmlDbService.class);
 
   private final ConcurrentMap<String, XmlDbContext> contexts;
+  private final String dbUriPrefix;
 
-  public MockXmlDbService() {
+  /**
+   * Constructs a new instance of GrpcXmlDbService, initializing the service with the specified
+   * database URI prefix.
+   *
+   * @param dbUriPrefix the database URI prefix used for constructing database-specific URIs. It is
+   *        injected from the application configuration using the key "xmldb.uri.prefix".
+   */
+  @Inject
+  public GrpcXmlDbService(@ConfigProperty(name = "xmldb.uri.prefix") String dbUriPrefix) {
+    this.dbUriPrefix = dbUriPrefix;
     this.contexts = new ConcurrentHashMap<>();
+  }
+
+  private XmlDbContext context() {
+    return contexts.computeIfAbsent(USERNAME.get(), this::initializeContext);
+  }
+
+  private XmlDbContext initializeContext(String username) {
+    return new XmlDbContext(dbUriPrefix);
   }
 
   @Override
@@ -57,57 +82,55 @@ public class MockXmlDbService implements XmlDbService {
   @Override
   public Uni<CollectionMeta> openRootCollection(RootCollectionName request) {
     LOGGER.debug("openRootCollection({})", request);
-    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
-        .openCollection(request);
+    return context().openCollection(request);
   }
 
   @Override
   public Uni<CollectionMeta> openChildCollection(ChildCollectionName request) {
     LOGGER.debug("openChildCollection({})", request);
-    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
-        .openCollection(request);
+    return context().openCollection(request);
   }
 
   @Override
   public Uni<Empty> closeCollection(HandleId request) {
     LOGGER.debug("closeCollection({})", request);
-    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
-        .closeCollection(request);
+    return context().closeCollection(request);
   }
 
   @Override
   public Uni<Count> collectionCount(HandleId request) {
     LOGGER.debug("collectionCount({})", request);
-    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
-        .collectionCount(request);
+    return context().collectionCount(request);
   }
 
   @Override
   public Uni<Count> resourceCount(HandleId request) {
     LOGGER.debug("resourceCount({})", request);
-    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
-        .resourceCount(request);
+    return context().resourceCount(request);
   }
 
   @Override
   public Multi<ChildCollectionName> childCollections(HandleId request) {
     LOGGER.debug("childCollections({})", request);
-    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
-        .childCollections(request);
+    return context().childCollections(request);
   }
 
   @Override
   public Multi<ResourceId> listResources(HandleId request) {
     LOGGER.debug("listResources({})", request);
-    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
-        .listResources(request);
+    return context().listResources(request);
   }
 
   @Override
-  public Uni<ResourceMeta> resource(ResourceId request) {
+  public Uni<ResourceMeta> openResource(ResourceId request) {
     LOGGER.debug("resource({})", request);
-    return contexts.computeIfAbsent(CONTEXT_USERNAME_KEY.get(), username -> new XmlDbContext())
-        .resource(request);
+    return context().openResource(request);
+  }
+
+  @Override
+  public Uni<Empty> closeResource(HandleId request) {
+    LOGGER.debug("resource({})", request);
+    return context().closeResource(request);
   }
 
   @Override

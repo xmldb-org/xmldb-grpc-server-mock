@@ -24,9 +24,10 @@ public interface AuthenticationService {
    *
    * @param authentication the authentication token used for validating access, typically provided
    *        as a string representation of a JWT, session token, or similar credential.
-   * @return the validated username if the token is valid and authentication is successful.
+   * @return the the validated user credential if the token is valid and authentication is
+   *         successful.
    * @throws AccessDeniedException if the token is invalid, improperly formatted, expired, or if the
    *         user lacks necessary access permissions.
    */
-  String validateToken(String authentication) throws AccessDeniedException;
+  Credentials validateToken(String authentication) throws AccessDeniedException;
 }
