@@ -68,12 +68,14 @@ public class TestDataBaseInitializer {
   @PostConstruct
   public void init() {
     LOGGER.info("Initializing test database..");
-    TestCollection rootCollection = database.addCollection("db");
-    rootCollection.addResource("test1.xml", TestXMLResource::new);
-    rootCollection.addResource("test2.xml", TestBinaryResource::new);
-    TestCollection subCollection = database.addCollection("db/child");
-    subCollection.addResource("test3.xml", TestBinaryResource::new);
-    rootCollection.addCollection("child", subCollection);
+    database.addCollection("db", rootCollection -> {
+      rootCollection.addResource("test1.xml", TestXMLResource::new);
+      rootCollection.addResource("test2.xml", TestBinaryResource::new);
+    }).addCollection("db/child", subCollection -> {
+      subCollection.addResource("test3.xml", TestBinaryResource::new);
+      subCollection.addResource("test4.xml", TestBinaryResource::new);
+      subCollection.addResource("test5.xml", TestBinaryResource::new);
+    });
     try {
       DatabaseManager.registerDatabase(database);
     } catch (XMLDBException e) {

@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,9 @@ public class GrpcAuthenticationService implements AuthenticationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(GrpcAuthenticationService.class);
   private static final Pattern BASIC_PATTERN =
       compile("^Basic (?<authString>.*)$", CASE_INSENSITIVE);
-  private static final Pattern CREDENTIAL_PATTERN = compile("^(?<user>\\w+)?:(?<pwd>\\w+)?$");
+  private static final Pattern CREDENTIAL_PATTERN = compile("^(?<user>[^:]*)(?::(?<pwd>.+))?$");
+
+  private final String defaultUser;
 
   /**
    * Default constructor for the GrpcAuthenticationService class.
@@ -48,9 +51,13 @@ public class GrpcAuthenticationService implements AuthenticationService {
    * Initializes an instance of the GrpcAuthenticationService. This constructor invokes the parent
    * class constructor and prepares the service for handling authentication-related tasks, such as
    * validating gRPC authentication tokens.
+   *
+   * @param defaultUser the default user to use for authentication if no credentials are provided
    */
-  public GrpcAuthenticationService() {
+  public GrpcAuthenticationService(
+      @ConfigProperty(name = "xmldb.default_user") String defaultUser) {
     super();
+    this.defaultUser = defaultUser;
   }
 
   @Override
@@ -63,7 +70,7 @@ public class GrpcAuthenticationService implements AuthenticationService {
       final Matcher credMatcher = CREDENTIAL_PATTERN.matcher(authString);
       if (credMatcher.matches()) {
         final String user = credMatcher.group("user");
-        return new Credentials(user == null ? "anonymous" : user,
+        return new Credentials(user.isBlank() ? defaultUser : user,
             Optional.ofNullable(credMatcher.group("pwd")));
       } else {
         LOGGER.error("No match on '{}' for credential pattern", authString);

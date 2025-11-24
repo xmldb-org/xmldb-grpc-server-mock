@@ -36,6 +36,13 @@ repositories {
   maven { url = 'https://central.sonatype.com/repository/maven-snapshots/' }
 }
 
+configurations.configureEach {
+  resolutionStrategy {
+    cacheChangingModulesFor(0, 'seconds')
+    cacheDynamicVersionsFor(0, 'seconds')
+  }
+}
+
 dependencies {
   implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.29.4')
   implementation 'io.quarkus:quarkus-grpc'
