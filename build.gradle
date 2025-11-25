@@ -11,8 +11,9 @@ plugins {
   id 'eclipse'
   id 'idea'
   id 'java-library'
-  id 'io.quarkus' version '3.30.0'
   id 'com.diffplug.spotless' version '8.1.0'
+  id 'io.quarkus' version '3.30.0'
+  id 'net.ltgt.errorprone' version '4.1.0'
 }
 
 group = 'net.sf.xmldb-org'
@@ -51,6 +52,8 @@ dependencies {
   implementation 'net.sf.xmldb-org:xmldb-grpc-client:0.1.0-SNAPSHOT:proto'
   implementation 'net.sf.xmldb-org:xmldb-mockdb:0.1.0-SNAPSHOT'
 
+  errorprone 'com.google.errorprone:error_prone_core:2.36.0'
+
   runtimeOnly 'ch.qos.logback:logback-classic:1.5.21'
 
   testImplementation 'org.assertj:assertj-core:3.27.6'
@@ -65,6 +68,11 @@ dependencies {
 
 compileJava {
   options.compilerArgs << '-Xlint:unchecked'
+  options.errorprone{
+      excludedPaths = '.*/build/classes/java/quarkus-generated-sources/.*'
+      allErrorsAsWarnings = false
+      disableWarningsInGeneratedCode = true
+  }
 }
 
 javadoc {
