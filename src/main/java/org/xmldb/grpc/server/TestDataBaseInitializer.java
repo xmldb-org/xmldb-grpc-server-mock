@@ -9,6 +9,10 @@
 
 package org.xmldb.grpc.server;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.nio.charset.StandardCharsets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmldb.api.DatabaseManager;
@@ -69,18 +73,30 @@ public class TestDataBaseInitializer {
   public void init() {
     LOGGER.info("Initializing test database..");
     database.addCollection("db", rootCollection -> {
-      rootCollection.addResource("test1.xml", TestXMLResource::new);
-      rootCollection.addResource("test2.xml", TestBinaryResource::new);
+      rootCollection.addResource("test1.xml", (id, col) -> xmlResource(id, col, "<root1/>"));
+      rootCollection.addResource("test2.bin", (id, col) -> binaryResource(id, col, "content2"));
     }).addCollection("db/child", subCollection -> {
-      subCollection.addResource("test3.xml", TestBinaryResource::new);
-      subCollection.addResource("test4.xml", TestBinaryResource::new);
-      subCollection.addResource("test5.xml", TestBinaryResource::new);
+      subCollection.addResource("test3.xml", (id, col) -> xmlResource(id, col, "<root3/>"));
+      subCollection.addResource("test4.xml", (id, col) -> xmlResource(id, col, "<root4/>"));
+      subCollection.addResource("test5.bin", (id, col) -> binaryResource(id, col, "content5"));
     });
     try {
       DatabaseManager.registerDatabase(database);
     } catch (XMLDBException e) {
       LOGGER.error("Failed to register test database", e);
     }
+  }
+
+  TestXMLResource xmlResource(String id, TestCollection collection, String content) {
+    final TestXMLResource resource = new TestXMLResource(id, collection);
+    resource.setContent(content);
+    return resource;
+  }
+
+  TestBinaryResource binaryResource(String id, TestCollection collection, String content) {
+    final TestBinaryResource resource = new TestBinaryResource(id, collection);
+    resource.setContent(content.getBytes(UTF_8));
+    return resource;
   }
 
   /**

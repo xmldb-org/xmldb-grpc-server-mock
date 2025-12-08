@@ -19,11 +19,14 @@ import org.slf4j.LoggerFactory;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
 import org.xmldb.api.grpc.Count;
-import org.xmldb.api.grpc.Data;
 import org.xmldb.api.grpc.Empty;
 import org.xmldb.api.grpc.HandleId;
+import org.xmldb.api.grpc.ResourceData;
 import org.xmldb.api.grpc.ResourceId;
+import org.xmldb.api.grpc.ResourceLoadRequest;
 import org.xmldb.api.grpc.ResourceMeta;
+import org.xmldb.api.grpc.ResourceStoreRequest;
+import org.xmldb.api.grpc.ResourceTransferStatus;
 import org.xmldb.api.grpc.RootCollectionName;
 import org.xmldb.api.grpc.SystemInfo;
 import org.xmldb.api.grpc.XmlDbService;
@@ -104,6 +107,12 @@ public class GrpcXmlDbService implements XmlDbService {
   }
 
   @Override
+  public Uni<ResourceId> createId(HandleId request) {
+    LOGGER.debug("createId({})", request);
+    return context().createId(request);
+  }
+
+  @Override
   public Uni<Count> resourceCount(HandleId request) {
     LOGGER.debug("resourceCount({})", request);
     return context().resourceCount(request);
@@ -123,19 +132,33 @@ public class GrpcXmlDbService implements XmlDbService {
 
   @Override
   public Uni<ResourceMeta> openResource(ResourceId request) {
-    LOGGER.debug("resource({})", request);
+    LOGGER.debug("openResource({})", request);
     return context().openResource(request);
   }
 
   @Override
+  public Uni<Empty> removeResource(HandleId request) {
+    LOGGER.info("removeResource({})", request);
+    //TODO: verify implementation
+    return context().removeResource(request);
+  }
+
+  @Override
   public Uni<Empty> closeResource(HandleId request) {
-    LOGGER.debug("resource({})", request);
+    LOGGER.debug("closeResource({})", request);
     return context().closeResource(request);
   }
 
   @Override
-  public Multi<Data> resourceData(HandleId request) {
-    LOGGER.info("resourceData({})", request);
-    return Multi.createFrom().empty();
+  public Multi<ResourceData> loadResourceData(ResourceLoadRequest request) {
+    LOGGER.debug("loadResourceData({})", request);
+    return context().loadResourceData(request);
+  }
+
+  @Override
+  public Uni<ResourceTransferStatus> storeResourceData(Multi<ResourceStoreRequest> request) {
+    LOGGER.info("storeResourceData({})", request);
+    //TODO: verify implementation
+    return context().storeResourceData(request);
   }
 }
