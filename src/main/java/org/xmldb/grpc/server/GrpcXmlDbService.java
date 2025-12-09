@@ -139,7 +139,7 @@ public class GrpcXmlDbService implements XmlDbService {
   @Override
   public Uni<Empty> removeResource(HandleId request) {
     LOGGER.info("removeResource({})", request);
-    //TODO: verify implementation
+    // TODO: verify implementation
     return context().removeResource(request);
   }
 
@@ -158,7 +158,7 @@ public class GrpcXmlDbService implements XmlDbService {
   @Override
   public Uni<ResourceTransferStatus> storeResourceData(Multi<ResourceStoreRequest> request) {
     LOGGER.info("storeResourceData({})", request);
-    //TODO: verify implementation
+    // TODO: verify implementation
     return context().storeResourceData(request);
   }
 }
