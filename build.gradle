@@ -65,6 +65,11 @@ dependencies {
 
 compileJava {
   options.compilerArgs << '-Xlint:unchecked'
+  options.errorprone {
+      excludedPaths = '.*/build/classes/java/quarkus-generated-sources/.*'
+      allErrorsAsWarnings = false
+      disableWarningsInGeneratedCode = true
+  }
 }
 
 javadoc {
