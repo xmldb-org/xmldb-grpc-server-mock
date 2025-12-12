@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.Flow;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +27,7 @@ import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
 import org.xmldb.api.grpc.Count;
+import org.xmldb.api.grpc.CreateResourceMeta;
 import org.xmldb.api.grpc.Empty;
 import org.xmldb.api.grpc.HandleId;
 import org.xmldb.api.grpc.ResourceData;
@@ -37,6 +38,8 @@ import org.xmldb.api.grpc.ResourceStoreRequest;
 import org.xmldb.api.grpc.ResourceTransferStatus;
 import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.api.grpc.RootCollectionName;
+import org.xmldb.api.modules.BinaryResource;
+import org.xmldb.api.modules.XMLResource;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -69,7 +72,7 @@ public class XmlDbContext {
 
   private final String dbUriPrefix;
   private final Map<HandleId, Collection> openCollections;
-  private final Map<HandleId, Resource<?>> openResources;
+  private final Map<HandleId, ResourceEntry> openResources;
 
   /**
    * Constructor for the XmlDbContext class. Initializes the database URI prefix and sets up
@@ -104,14 +107,26 @@ public class XmlDbContext {
             .setName(collection.getName()).build());
   }
 
-  private Uni<ResourceMeta> registerResource(Resource<?> resource) throws XMLDBException {
+  private Uni<ResourceMeta> registerResource(Resource<?> resource, String resourceIdString)
+      throws XMLDBException {
     final HandleId handleId = createHandleId();
-    openResources.put(handleId, resource);
-    return Uni.createFrom()
-        .item(ResourceMeta.newBuilder().setResourceId(handleId)
-            .setType(convert(resource.getResourceType()))
-            .setCreationTime(resource.getCreationTime().toEpochMilli())
-            .setLastModificationTime(resource.getLastModificationTime().toEpochMilli()).build());
+    openResources.put(handleId, new ResourceEntry(resource, resourceIdString));
+    return Uni.createFrom().item(createResourceMeta(resource, handleId));
+  }
+
+  private ResourceMeta createResourceMeta(Resource<?> resource, HandleId handleId)
+      throws XMLDBException {
+    return ResourceMeta.newBuilder().setResourceId(handleId).setContentType(contentTypeOf(resource))
+        .setType(convert(resource.getResourceType()))
+        .setCreationTime(resource.getCreationTime().toEpochMilli())
+        .setLastModificationTime(resource.getLastModificationTime().toEpochMilli()).build();
+  }
+
+  private String contentTypeOf(Resource<?> resource) {
+    return switch (resource.getResourceType()) {
+      case BINARY_RESOURCE -> "application/octet-stream";
+      case XML_RESOURCE -> "text/xml";
+    };
   }
 
   private ResourceType convert(org.xmldb.api.base.ResourceType resourceType) {
@@ -219,10 +234,34 @@ public class XmlDbContext {
     }
   }
 
+  Uni<ResourceMeta> createResource(CreateResourceMeta createMeta) {
+    try {
+      final ResourceId resourceId = createMeta.getResourceId();
+      final Collection collection = openCollections.get(resourceId.getCollectionId());
+      final String resourceIdString = resourceId.getResourceId();
+      final Resource<?> resource =
+          collection.createResource(resourceIdString, resourceTypeOf(createMeta.getType()));
+      return registerResource(resource, resourceIdString);
+    } catch (XMLDBException e) {
+      LOGGER.error("Error getting resource for {}", createMeta.getResourceId(), e);
+      return Uni.createFrom().failure(e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  <R> Class<R> resourceTypeOf(ResourceType type) throws XMLDBException {
+    return switch (type) {
+      case XML -> (Class<R>) XMLResource.class;
+      case BINARY -> (Class<R>) BinaryResource.class;
+      case UNRECOGNIZED -> throw new XMLDBException(ErrorCodes.NO_SUCH_RESOURCE);
+    };
+  }
+
   Uni<ResourceMeta> openResource(ResourceId resourceId) {
     try {
       final Collection collection = openCollections.get(resourceId.getCollectionId());
-      return registerResource(collection.getResource(resourceId.getResourceId()));
+      final String resourceIdString = resourceId.getResourceId();
+      return registerResource(collection.getResource(resourceIdString), resourceIdString);
     } catch (XMLDBException e) {
       LOGGER.error("Error getting resource for {}", resourceId, e);
       return Uni.createFrom().failure(e);
@@ -231,12 +270,12 @@ public class XmlDbContext {
 
   Uni<Empty> closeResource(HandleId handleId) {
     try {
-      final Resource<?> resource = openResources.remove(handleId);
-      if (resource == null) {
+      final ResourceEntry resourceEntry = openResources.remove(handleId);
+      if (resourceEntry == null) {
         LOGGER.warn("Resource {} not found", handleId);
       } else {
-        LOGGER.info("Closing resource {}", resource.getId());
-        resource.close();
+        LOGGER.info("Closing resourceEntry {}", resourceEntry.id());
+        resourceEntry.close();
       }
       return Uni.createFrom().item(EMPTY);
     } catch (XMLDBException e) {
@@ -257,9 +296,9 @@ public class XmlDbContext {
   }
 
   Uni<Empty> removeResource(HandleId handleId) {
-    try (final Resource<?> resource = openResources.get(handleId)) {
-      final Collection collection = resource.getParentCollection();
-      collection.removeResource(resource);
+    try (final ResourceEntry resourceEntry = openResources.get(handleId)) {
+      final Collection collection = resourceEntry.getParentCollection();
+      collection.removeResource(resourceEntry.resource());
       return Uni.createFrom().item(EMPTY);
     } catch (XMLDBException e) {
       LOGGER.error("Error creating new id for {}", handleId, e);
@@ -268,16 +307,24 @@ public class XmlDbContext {
   }
 
   Multi<ResourceData> loadResourceData(ResourceLoadRequest loadRequest) {
-    final Resource<?> resource = openResources.get(loadRequest.getResourceId());
-    if (resource == null) {
+    final ResourceEntry resourceEntry = openResources.get(loadRequest.getResourceId());
+    if (resourceEntry == null) {
       return Multi.createFrom().failure(new XMLDBException(ErrorCodes.NO_SUCH_RESOURCE));
     }
     final ResourceData.Builder builder = ResourceData.newBuilder();
-    return Multi.createFrom().publisher(subscriber -> new ResourceDataSubscription(builder,
-        loadRequest.getChunkSize(), resource::getContentAsStream, subscriber));
+    return Multi.createFrom().publisher(subscriber -> new LoadResourceDataSubscription(builder,
+        loadRequest.getChunkSize(), resourceEntry::getContentAsStream, subscriber));
   }
 
   Uni<ResourceTransferStatus> storeResourceData(Multi<ResourceStoreRequest> resourceData) {
-    return Uni.createFrom().failure(new UnsupportedOperationException("Not yet implemented"));
+    try (final StoreResourceContext resourceContext =
+        new StoreResourceContext(openResources::get, this::createResourceMeta)) {
+      return resourceData.collect()
+          .with(Collector.of(() -> resourceContext, StoreResourceContext::accept,
+              StoreResourceContext::combine, StoreResourceContext::finish));
+    } catch (XMLDBException e) {
+      LOGGER.error("Error storing resource {}", resourceData, e);
+      return Uni.createFrom().failure(e);
+    }
   }
 }

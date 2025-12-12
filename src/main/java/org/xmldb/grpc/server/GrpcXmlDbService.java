@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
 import org.xmldb.api.grpc.Count;
+import org.xmldb.api.grpc.CreateResourceMeta;
 import org.xmldb.api.grpc.Empty;
 import org.xmldb.api.grpc.HandleId;
 import org.xmldb.api.grpc.ResourceData;
@@ -128,6 +129,12 @@ public class GrpcXmlDbService implements XmlDbService {
   public Multi<ResourceId> listResources(HandleId request) {
     LOGGER.debug("listResources({})", request);
     return context().listResources(request);
+  }
+
+  @Override
+  public Uni<ResourceMeta> createResource(CreateResourceMeta request) {
+    LOGGER.debug("v({})", request);
+    return context().createResource(request);
   }
 
   @Override

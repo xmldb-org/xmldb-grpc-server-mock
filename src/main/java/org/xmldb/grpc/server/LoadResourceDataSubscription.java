@@ -19,7 +19,7 @@ import org.xmldb.api.grpc.ResourceData;
 
 import com.google.protobuf.ByteString;
 
-class ResourceDataSubscription implements Flow.Subscription {
+class LoadResourceDataSubscription implements Flow.Subscription {
   private final ResourceData.Builder builder;
   private final StreamConsumer streamConsumer;
   private final Flow.Subscriber<? super ResourceData> subscriber;
@@ -27,7 +27,7 @@ class ResourceDataSubscription implements Flow.Subscription {
 
   private boolean canceled = false;
 
-  ResourceDataSubscription(ResourceData.Builder builder, int chunkSize,
+  LoadResourceDataSubscription(ResourceData.Builder builder, int chunkSize,
       StreamConsumer streamConsumer, Flow.Subscriber<? super ResourceData> subscriber) {
     this.builder = builder;
     this.streamConsumer = streamConsumer;
