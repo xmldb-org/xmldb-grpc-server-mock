@@ -88,15 +88,23 @@ public class TestDataBaseInitializer {
   }
 
   TestXMLResource xmlResource(String id, TestCollection collection, String content) {
-    final TestXMLResource resource = new TestXMLResource(id, collection);
-    resource.setContent(content);
-    return resource;
+    try {
+      final TestXMLResource resource = new TestXMLResource(id, collection);
+      resource.setContent(content);
+      return resource;
+    } catch (XMLDBException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   TestBinaryResource binaryResource(String id, TestCollection collection, String content) {
-    final TestBinaryResource resource = new TestBinaryResource(id, collection);
-    resource.setContent(content.getBytes(UTF_8));
-    return resource;
+    try {
+      final TestBinaryResource resource = new TestBinaryResource(id, collection);
+      resource.setContent(content.getBytes(UTF_8));
+      return resource;
+    } catch (XMLDBException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   /**

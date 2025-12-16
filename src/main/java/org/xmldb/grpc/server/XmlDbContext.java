@@ -107,14 +107,14 @@ public class XmlDbContext {
             .setName(collection.getName()).build());
   }
 
-  private Uni<ResourceMeta> registerResource(Resource<?> resource, String resourceIdString)
+  private Uni<ResourceMeta> registerResource(Resource resource, String resourceIdString)
       throws XMLDBException {
     final HandleId handleId = createHandleId();
     openResources.put(handleId, new ResourceEntry(resource, resourceIdString));
     return Uni.createFrom().item(createResourceMeta(resource, handleId));
   }
 
-  private ResourceMeta createResourceMeta(Resource<?> resource, HandleId handleId)
+  private ResourceMeta createResourceMeta(Resource resource, HandleId handleId)
       throws XMLDBException {
     return ResourceMeta.newBuilder().setResourceId(handleId).setContentType(contentTypeOf(resource))
         .setType(convert(resource.getResourceType()))
@@ -122,7 +122,7 @@ public class XmlDbContext {
         .setLastModificationTime(resource.getLastModificationTime().toEpochMilli()).build();
   }
 
-  private String contentTypeOf(Resource<?> resource) {
+  private String contentTypeOf(Resource resource) {
     return switch (resource.getResourceType()) {
       case BINARY_RESOURCE -> "application/octet-stream";
       case XML_RESOURCE -> "text/xml";
@@ -239,7 +239,7 @@ public class XmlDbContext {
       final ResourceId resourceId = createMeta.getResourceId();
       final Collection collection = openCollections.get(resourceId.getCollectionId());
       final String resourceIdString = resourceId.getResourceId();
-      final Resource<?> resource =
+      final Resource resource =
           collection.createResource(resourceIdString, resourceTypeOf(createMeta.getType()));
       return registerResource(resource, resourceIdString);
     } catch (XMLDBException e) {

@@ -30,5 +30,5 @@ public interface ResourceMetaFunction {
    * @return the resulting {@link ResourceMeta} after processing
    * @throws XMLDBException if an error occurs during the operation
    */
-  ResourceMeta apply(Resource<?> resource, HandleId handleId) throws XMLDBException;
+  ResourceMeta apply(Resource resource, HandleId handleId) throws XMLDBException;
 }

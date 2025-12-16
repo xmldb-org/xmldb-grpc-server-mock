@@ -15,7 +15,7 @@ import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.XMLDBException;
 
-record ResourceEntry(Resource<?> resource, String id) implements AutoCloseable {
+record ResourceEntry(Resource resource, String id) implements AutoCloseable {
   void getContentAsStream(OutputStream outputStream) throws XMLDBException {
     resource.getContentAsStream(outputStream);
   }
