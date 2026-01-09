@@ -67,7 +67,6 @@ dependencies {
 }
 
 compileJava {
-  options.compilerArgs << '-Xlint:unchecked'
   options.errorprone {
       excludedPaths = '.*/build/classes/java/quarkus-generated-sources/.*'
       allErrorsAsWarnings = false
@@ -86,6 +85,7 @@ jar {
 
 tasks.withType(JavaCompile).configureEach {
   dependsOn 'spotlessJavaApply', 'quarkusGenerateCode'
+  options.compilerArgs += ['-Xlint:unchecked', '-XDaddTypeAnnotationsToSymbol=true']
 }
 
 tasks.withType(Jar).configureEach {
