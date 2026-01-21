@@ -47,7 +47,7 @@ configurations.configureEach {
 dependencies {
   errorprone 'com.google.errorprone:error_prone_core:2.46.0'
 
-  implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.30.6')
+  implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.30.7')
   implementation 'io.quarkus:quarkus-grpc'
   implementation 'io.quarkus:quarkus-arc'
   implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-SNAPSHOT'
