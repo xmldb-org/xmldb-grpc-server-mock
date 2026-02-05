@@ -45,7 +45,7 @@ configurations.configureEach {
 }
 
 dependencies {
-  errorprone 'com.google.errorprone:error_prone_core:2.46.0'
+  errorprone 'com.google.errorprone:error_prone_core:2.47.0'
 
   implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.31.2')
   implementation 'io.quarkus:quarkus-grpc'
