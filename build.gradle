@@ -54,7 +54,7 @@ dependencies {
   implementation 'net.sf.xmldb-org:xmldb-grpc-client:0.1.0-SNAPSHOT:proto'
   implementation 'net.sf.xmldb-org:xmldb-mockdb:0.1.0-SNAPSHOT'
 
-  runtimeOnly 'ch.qos.logback:logback-classic:1.5.31'
+  runtimeOnly 'ch.qos.logback:logback-classic:1.5.32'
 
   testImplementation 'org.assertj:assertj-core:3.27.7'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:6.0.3'
