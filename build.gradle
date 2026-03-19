@@ -12,7 +12,7 @@ plugins {
   id 'idea'
   id 'java-library'
   id 'io.quarkus' version '3.34.0'
-  id 'com.diffplug.spotless' version '8.3.0'
+  id 'com.diffplug.spotless' version '8.4.0'
   id 'net.ltgt.errorprone' version '5.1.0'
 }
 
@@ -47,7 +47,7 @@ configurations.configureEach {
 dependencies {
   errorprone 'com.google.errorprone:error_prone_core:2.48.0'
 
-  implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.32.3')
+  implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.32.4')
   implementation 'io.quarkus:quarkus-grpc'
   implementation 'io.quarkus:quarkus-arc'
   implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-SNAPSHOT'
