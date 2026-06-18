@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Codacy Analysis CLI
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Run codacy-analysis-cli
         uses: codacy/codacy-analysis-cli-action@master
 
@@ -25,7 +25,7 @@ jobs:
       matrix:
         jdk: ['21', '25']
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: actions/setup-java@v5
       with:
         distribution: temurin
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy Docker Image
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: build-artifacts-21
