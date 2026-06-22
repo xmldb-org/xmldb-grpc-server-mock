@@ -41,7 +41,7 @@ public class GrpcAuthenticationService implements AuthenticationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(GrpcAuthenticationService.class);
   private static final Pattern BASIC_PATTERN =
       compile("^Basic (?<authString>.*)$", CASE_INSENSITIVE);
-  private static final Pattern CREDENTIAL_PATTERN = compile("^(?<user>[^:]*)(?::(?<pwd>.+))?$");
+  private static final Pattern CREDENTIAL_PATTERN = compile("^(?<user>[^:]*)(?::(?<pwd>.+)?)?$");
 
   private final String defaultUser;
 
@@ -65,15 +65,19 @@ public class GrpcAuthenticationService implements AuthenticationService {
     LOGGER.debug("validateToken({})", authentication);
     final Matcher matcher = BASIC_PATTERN.matcher(authentication);
     if (matcher.matches()) {
-      final String authString =
-          new String(Base64.getDecoder().decode(matcher.group("authString")), UTF_8);
-      final Matcher credMatcher = CREDENTIAL_PATTERN.matcher(authString);
-      if (credMatcher.matches()) {
-        final String user = credMatcher.group("user");
-        return new Credentials(user.isBlank() ? defaultUser : user,
-            Optional.ofNullable(credMatcher.group("pwd")));
-      } else {
-        LOGGER.error("No match on '{}' for credential pattern", authString);
+      try {
+        final String authString =
+            new String(Base64.getDecoder().decode(matcher.group("authString")), UTF_8);
+        final Matcher credMatcher = CREDENTIAL_PATTERN.matcher(authString);
+        if (credMatcher.matches()) {
+          final String user = credMatcher.group("user");
+          return new Credentials(user.isBlank() ? defaultUser : user,
+              Optional.ofNullable(credMatcher.group("pwd")));
+        } else {
+          LOGGER.error("No match on '{}' for credential pattern", authString);
+        }
+      } catch (Exception e) {
+        LOGGER.error("Error decoding token", e);
       }
     }
     throw new AccessDeniedException("Access denied");
