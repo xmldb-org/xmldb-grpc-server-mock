@@ -47,14 +47,14 @@ configurations.configureEach {
 dependencies {
   errorprone 'com.google.errorprone:error_prone_core:2.50.0'
 
-  implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.39.5')
+  implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.40.1')
   implementation 'io.quarkus:quarkus-grpc'
   implementation 'io.quarkus:quarkus-arc'
   implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-SNAPSHOT'
   implementation 'net.sf.xmldb-org:xmldb-grpc-client:0.1.0-SNAPSHOT:proto'
   implementation 'net.sf.xmldb-org:xmldb-mockdb:0.1.0-SNAPSHOT'
 
-  runtimeOnly 'ch.qos.logback:logback-classic:1.6.4'
+  runtimeOnly 'ch.qos.logback:logback-classic:1.6.5'
 
   testImplementation 'org.assertj:assertj-core:3.27.7'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:6.1.3'
