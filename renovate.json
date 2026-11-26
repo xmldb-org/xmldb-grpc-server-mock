@@ -5,7 +5,9 @@
     "group:all",
     "schedule:daily"
   ],
-  "dependencyDashboard": true,
+  "dependencyDashboard": {
+    "enabled": true
+  },
   "packageRules": [
     {
       "matchUpdateTypes": [
