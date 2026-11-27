@@ -10,6 +10,12 @@
   },
   "packageRules": [
     {
+      "matchPackagePatterns": [
+        "^io\\.quarkus"
+      ],
+      "groupName": "quarkus dependencies"
+    },
+    {
       "matchUpdateTypes": [
         "minor",
         "patch"
